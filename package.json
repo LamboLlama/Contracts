@@ -1,0 +1,17 @@
+{
+  "name": "lambollama",
+  "version": "1.0.0",
+  "description": "Just Lambo's and Llama's",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@nomicfoundation/hardhat-toolbox": "^5.0.0",
+    "@openzeppelin/contracts": "^5.0.1",
+    "hardhat": "^2.22.4",
+    "hardhat-contract-sizer": "^2.10.0"
+  }
+}

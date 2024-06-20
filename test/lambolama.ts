@@ -19,15 +19,7 @@ describe("Ticket", async () => {
     const LamboLlama = await ethers.getContractFactory("LamboLlama");
     const EndpointMock = await ethers.getContractFactory("EndpointMock");
     const lzEndpointMock = await EndpointMock.deploy();
-    lamboLlama = await LamboLlama.deploy(
-      DELEGATE.address,
-      DELEGATE.address,
-      100,
-      100,
-      100,
-      DELEGATE.address,
-      lzEndpointMock.address
-    );
+    lamboLlama = await LamboLlama.deploy(DELEGATE.address, 100, lzEndpointMock.address);
 
     await reverter.snapshot();
   });
@@ -37,7 +29,7 @@ describe("Ticket", async () => {
   describe("test", async () => {
     it("check delegate address as owner", async () => {
       expect(await lamboLlama.owner()).to.equal(DELEGATE.address);
-      expect(await lamboLlama.balanceOf(DELEGATE.address)).to.equal(300);
+      expect(await lamboLlama.balanceOf(DELEGATE.address)).to.equal(100);
     });
   });
 });

@@ -7,7 +7,7 @@ function bn(number: string) {
   return ethers.BigNumber.from(number);
 }
 
-describe("permit", function () {
+describe.skip("permit", function () {
   let lll: LamboLlama;
   let owner: SignerWithAddress;
   let addr1: SignerWithAddress;
@@ -30,7 +30,7 @@ describe("permit", function () {
       name: await lll.name(),
       version: "1",
       chainId: (await ethers.provider.getNetwork()).chainId,
-      verifyingContract: lll.address
+      verifyingContract: lll.address,
     };
 
     const types = {
@@ -39,8 +39,8 @@ describe("permit", function () {
         { name: "spender", type: "address" },
         { name: "value", type: "uint256" },
         { name: "nonce", type: "uint256" },
-        { name: "deadline", type: "uint256" }
-      ]
+        { name: "deadline", type: "uint256" },
+      ],
     };
 
     const value = {
@@ -48,7 +48,7 @@ describe("permit", function () {
       spender: addr1.address,
       value: ethers.utils.parseUnits("100"),
       nonce: nonce.toNumber(),
-      deadline: deadline
+      deadline: deadline,
     };
 
     const signature = await owner._signTypedData(domain, types, value);

@@ -5,6 +5,7 @@ import {ERC20Permit} from "@openzeppelin/contracts/token/ERC20/extensions/ERC20P
 import {OFT} from "@layerzerolabs/lz-evm-oapp-v2/contracts/oft/OFT.sol";
 
 contract LamboLlama is ERC20Permit, OFT {
+    // local ganache 31337, gnosis 100
     uint256 constant INITIAL_CHAIN_ID = 100;
 
     constructor(

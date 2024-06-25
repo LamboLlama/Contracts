@@ -36,6 +36,12 @@ contract Vesting is Ownable {
         token.transfer(msg.sender, token.balanceOf(address(this)));
     }
 
+    function withdrawStuckERC20(IERC20 token_) external onlyOwner {
+        require(address(token_) != address(token), "Vesting: Cannot withdraw vesting token");
+
+        token_.transfer(msg.sender, token_.balanceOf(address(this)));
+    }
+
     function setVestingSchedule(
         address beneficiary_,
         uint256 totalAmount_,

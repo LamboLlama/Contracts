@@ -60,6 +60,35 @@ describe("Vesting", function () {
     });
   });
 
+  describe("withdrawStuckERC20", async () => {
+    let otherToken: ERC20Mock;
+
+    before("", async () => {
+      const Token = await ethers.getContractFactory("ERC20Mock");
+      otherToken = (await Token.deploy("Other Token", "OTK")) as ERC20Mock;
+    });
+
+    it("Should allow owner to withdraw stuck ERC20 tokens", async function () {
+      await otherToken.mint(vesting.address, 1000);
+      await vesting.withdrawStuckERC20(otherToken.address);
+      expect(await otherToken.balanceOf(owner.address)).to.equal(1000);
+    });
+
+    it("Should not allow owner to withdraw vesting token", async function () {
+      await token.mint(vesting.address, 1000);
+      await expect(vesting.withdrawStuckERC20(token.address)).to.be.revertedWith(
+        "Vesting: Cannot withdraw vesting token"
+      );
+    });
+
+    it("Should not allow non-owner to withdraw stuck ERC20 tokens", async function () {
+      await otherToken.mint(vesting.address, 1000);
+      await expect(vesting.connect(addr1).withdrawStuckERC20(otherToken.address)).to.be.revertedWith(
+        "Ownable: caller is not the owner"
+      );
+    });
+  });
+
   describe("fix", async () => {
     it("Should allow owner to fix the contract", async function () {
       await vesting.fix();

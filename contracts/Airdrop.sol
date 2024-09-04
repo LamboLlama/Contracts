@@ -4,7 +4,7 @@ pragma solidity 0.8.22;
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 
-contract OldSchoolAirdrop is Ownable {
+contract Airdrop is Ownable {
     IERC20 public immutable token;
     mapping(address => uint256) public claimableTokens;
     uint256 public totalClaimable;
@@ -19,16 +19,10 @@ contract OldSchoolAirdrop is Ownable {
         uint256 claimPeriodStart_,
         uint256 claimPeriodEnd_
     ) Ownable() {
-        require(address(token_) != address(0), "OldSchoolAirdrop: zero token address");
-        require(owner_ != address(0), "OldSchoolAirdrop: zero owner address");
-        require(
-            claimPeriodStart_ > block.timestamp,
-            "OldSchoolAirdrop: start should be in the future"
-        );
-        require(
-            claimPeriodEnd_ > claimPeriodStart_,
-            "OldSchoolAirdrop: start should be before end"
-        );
+        require(address(token_) != address(0), "Airdrop: zero token address");
+        require(owner_ != address(0), "Airdrop: zero owner address");
+        require(claimPeriodStart_ > block.timestamp, "Airdrop: start should be in the future");
+        require(claimPeriodEnd_ > claimPeriodStart_, "Airdrop: start should be before end");
 
         token = token_;
         claimPeriodStart = claimPeriodStart_;
@@ -40,16 +34,10 @@ contract OldSchoolAirdrop is Ownable {
         address[] calldata recipients_,
         uint256[] calldata claimableAmount_
     ) external onlyOwner {
-        require(
-            recipients_.length == claimableAmount_.length,
-            "OldSchoolAirdrop: invalid array length"
-        );
+        require(recipients_.length == claimableAmount_.length, "Airdrop: invalid array length");
         uint256 sum = totalClaimable;
         for (uint256 i = 0; i < recipients_.length; i++) {
-            require(
-                claimableTokens[recipients_[i]] == 0,
-                "OldSchoolAirdrop: recipient already set"
-            );
+            require(claimableTokens[recipients_[i]] == 0, "Airdrop: recipient already set");
             claimableTokens[recipients_[i]] = claimableAmount_[i];
             unchecked {
                 sum += claimableAmount_[i];
@@ -60,11 +48,11 @@ contract OldSchoolAirdrop is Ownable {
     }
 
     function claim() public {
-        require(block.timestamp >= claimPeriodStart, "OldSchoolAirdrop: claim not started");
-        require(block.timestamp < claimPeriodEnd, "OldSchoolAirdrop: claim ended");
+        require(block.timestamp >= claimPeriodStart, "Airdrop: claim not started");
+        require(block.timestamp < claimPeriodEnd, "Airdrop: claim ended");
 
         uint256 amount = claimableTokens[msg.sender];
-        require(amount > 0, "OldSchoolAirdrop: nothing to claim");
+        require(amount > 0, "Airdrop: nothing to claim");
 
         claimableTokens[msg.sender] = 0;
 

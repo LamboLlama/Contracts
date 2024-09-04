@@ -30,6 +30,10 @@
     "lint-ts-fix": "prettier --write \"./**/*.ts\"",
     "lint-sol-fix": "prettier --write \"contracts/**/*.sol\""
   },
+  "overrides": {
+    "whatwg-url": "^14.0.0",
+    "idna-uts46-hx": "^4.0.0"
+  },
   "dependencies": {
     "@layerzerolabs/lz-evm-oapp-v2": "^2.3.23",
     "@openzeppelin/contracts": "4.9.2",

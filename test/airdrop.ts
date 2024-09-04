@@ -3,10 +3,10 @@ import { ethers } from "hardhat";
 import { Reverter } from "@/test/helpers/reverter";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import { time } from "@nomicfoundation/hardhat-network-helpers";
-import { ERC20Mock, OldSchoolAirdrop } from "@ethers-v5";
+import { ERC20Mock, Airdrop } from "@ethers-v5";
 
-describe("OldSchoolAirdrop", function () {
-  let airdrop: OldSchoolAirdrop;
+describe("Airdrop", function () {
+  let airdrop: Airdrop;
   let token: ERC20Mock;
   let owner: SignerWithAddress;
   let addr1: SignerWithAddress;
@@ -26,13 +26,13 @@ describe("OldSchoolAirdrop", function () {
     claimPeriodStart = (await time.latest()) + 1000;
     claimPeriodEnd = claimPeriodStart + 10000;
 
-    const OldSchoolAirdrop = await ethers.getContractFactory("OldSchoolAirdrop");
-    airdrop = (await OldSchoolAirdrop.deploy(
+    const Airdrop = await ethers.getContractFactory("Airdrop");
+    airdrop = (await Airdrop.deploy(
       token.address,
       owner.address,
       claimPeriodStart,
       claimPeriodEnd
-    )) as OldSchoolAirdrop;
+    )) as Airdrop;
     await airdrop.deployed();
 
     await reverter.snapshot();
@@ -55,32 +55,32 @@ describe("OldSchoolAirdrop", function () {
     });
 
     it("Should not allow zero address for token", async () => {
-      const OldSchoolAirdrop = await ethers.getContractFactory("OldSchoolAirdrop");
+      const Airdrop = await ethers.getContractFactory("Airdrop");
       await expect(
-        OldSchoolAirdrop.deploy(ethers.constants.AddressZero, owner.address, claimPeriodStart, claimPeriodEnd)
-      ).to.be.revertedWith("OldSchoolAirdrop: zero token address");
+        Airdrop.deploy(ethers.constants.AddressZero, owner.address, claimPeriodStart, claimPeriodEnd)
+      ).to.be.revertedWith("Airdrop: zero token address");
     });
 
     it("Should not allow zero address for owner", async () => {
-      const OldSchoolAirdrop = await ethers.getContractFactory("OldSchoolAirdrop");
+      const Airdrop = await ethers.getContractFactory("Airdrop");
       await expect(
-        OldSchoolAirdrop.deploy(token.address, ethers.constants.AddressZero, claimPeriodStart, claimPeriodEnd)
-      ).to.be.revertedWith("OldSchoolAirdrop: zero owner address");
+        Airdrop.deploy(token.address, ethers.constants.AddressZero, claimPeriodStart, claimPeriodEnd)
+      ).to.be.revertedWith("Airdrop: zero owner address");
     });
 
     it("Should not allow past start date", async () => {
       const pastTimestamp = (await time.latest()) - 1;
-      const OldSchoolAirdrop = await ethers.getContractFactory("OldSchoolAirdrop");
+      const Airdrop = await ethers.getContractFactory("Airdrop");
       await expect(
-        OldSchoolAirdrop.deploy(token.address, owner.address, pastTimestamp, claimPeriodEnd)
-      ).to.be.revertedWith("OldSchoolAirdrop: start should be in the future");
+        Airdrop.deploy(token.address, owner.address, pastTimestamp, claimPeriodEnd)
+      ).to.be.revertedWith("Airdrop: start should be in the future");
     });
 
     it("Should not allow end date before start date", async () => {
-      const OldSchoolAirdrop = await ethers.getContractFactory("OldSchoolAirdrop");
+      const Airdrop = await ethers.getContractFactory("Airdrop");
       await expect(
-        OldSchoolAirdrop.deploy(token.address, owner.address, claimPeriodEnd, claimPeriodStart)
-      ).to.be.revertedWith("OldSchoolAirdrop: start should be before end");
+        Airdrop.deploy(token.address, owner.address, claimPeriodEnd, claimPeriodStart)
+      ).to.be.revertedWith("Airdrop: start should be before end");
     });
   });
 
@@ -99,14 +99,14 @@ describe("OldSchoolAirdrop", function () {
 
     it("Should not allow setting recipients with different array lengths", async () => {
       await expect(airdrop.setRecipients([addr1.address], [100, 200])).to.be.revertedWith(
-        "OldSchoolAirdrop: invalid array length"
+        "Airdrop: invalid array length"
       );
     });
 
     it("Should not allow setting a recipient more than once", async () => {
       await airdrop.setRecipients([addr1.address], [100]);
       await expect(airdrop.setRecipients([addr1.address], [200])).to.be.revertedWith(
-        "OldSchoolAirdrop: recipient already set"
+        "Airdrop: recipient already set"
       );
     });
   });
@@ -126,19 +126,19 @@ describe("OldSchoolAirdrop", function () {
     });
 
     it("Should not allow recipients to claim tokens before start period", async () => {
-      await expect(airdrop.connect(addr1).claim()).to.be.revertedWith("OldSchoolAirdrop: claim not started");
+      await expect(airdrop.connect(addr1).claim()).to.be.revertedWith("Airdrop: claim not started");
     });
 
     it("Should not allow recipients to claim tokens after end period", async () => {
       await time.increaseTo(claimPeriodEnd + 1);
 
-      await expect(airdrop.connect(addr1).claim()).to.be.revertedWith("OldSchoolAirdrop: claim ended");
+      await expect(airdrop.connect(addr1).claim()).to.be.revertedWith("Airdrop: claim ended");
     });
 
     it("Should not allow recipients to claim tokens if they have none", async () => {
       await time.increaseTo(claimPeriodStart + 1);
 
-      await expect(airdrop.connect(addr3).claim()).to.be.revertedWith("OldSchoolAirdrop: nothing to claim");
+      await expect(airdrop.connect(addr3).claim()).to.be.revertedWith("Airdrop: nothing to claim");
     });
   });
 

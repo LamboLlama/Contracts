@@ -13,8 +13,12 @@
     {
       "files": "*.ts",
       "options": {
-        "printWidth": 120,
-        "tabWidth": 2
+        "useTabs": true,
+        "tabWidth": 4,
+        "bracketSpacing": true,
+        "jsxBracketSameLine": true,
+        "singleQuote": true,
+        "trailingComma": "es5"
       }
     }
   ]

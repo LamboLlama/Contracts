@@ -44,7 +44,7 @@ describe('Presale Contract', function () {
         const fundingStartTime = currentTime + 10; // Starts in 10 seconds
         const fundingEndTime = fundingStartTime + 3600; // Ends in 1 hour
         const claimStartTime = fundingEndTime + 3600; // Claims start 1 hour after funding ends
-        const totalTokensForSale = ethers.utils.parseUnits('1000000', 18); // 1,000,000 tokens
+        const totalTokensForSale = ethers.utils.parseUnits('12000000000000', 18); // 1,000,000 tokens
 
         presale = (await PresaleFactory.deploy(
             token.address,
@@ -75,7 +75,7 @@ describe('Presale Contract', function () {
             expect(await presale.fundingStartTime()).to.equal((await presale.fundingStartTime()).toNumber());
             expect(await presale.fundingEndTime()).to.equal((await presale.fundingEndTime()).toNumber());
             expect(await presale.claimStartTime()).to.equal((await presale.claimStartTime()).toNumber());
-            expect(await presale.totalTokensForSale()).to.equal(ethers.utils.parseUnits('1000000', 18));
+            expect(await presale.totalTokensForSale()).to.equal(ethers.utils.parseUnits('12000000000000', 18));
             expect(await presale.owner()).to.equal(owner.address);
             expect(await presale.fundsWallet()).to.equal(fundsWallet.address);
         });
@@ -85,7 +85,7 @@ describe('Presale Contract', function () {
         it('should allow the owner to deposit tokens', async function () {
             // The owner already deposited tokens in beforeEach
             expect(await presale.tokensDeposited()).to.be.true;
-            expect(await token.balanceOf(presale.address)).to.equal(ethers.utils.parseUnits('1000000', 18));
+            expect(await token.balanceOf(presale.address)).to.equal(ethers.utils.parseUnits('12000000000000', 18));
         });
 
         it('should not allow non-owners to deposit tokens', async function () {

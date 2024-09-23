@@ -54,6 +54,11 @@ The vesting contract ensures that team tokens are released over a specified time
    npm run test
    ```
 1. **Coverage of all contracts**:
+
    ```bash
    npm run coverage
    ```
+
+   The current status of the tests:
+
+   ![Run Tests](https://github.com/LamboLlama/Contracts/actions/workflows/main.yml/badge.svg?branch=main)

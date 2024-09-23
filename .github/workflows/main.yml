@@ -3,11 +3,11 @@ name: Run Tests
 on:
   push:
     branches:
-      - main # You can adjust this to your branch
+      - main
   pull_request:
     branches:
       - main
-  workflow_dispatch: # Add this line to enable manual triggering
+  workflow_dispatch:
 
 jobs:
   test:
@@ -19,10 +19,10 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Setup Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
 
@@ -30,11 +30,11 @@ jobs:
         run: npm install
 
       - name: Run Tests
-        run: npm run test
+        run: npx hardhat test
 
       - name: Upload test results (if any)
         if: always()
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: test-results
-          path: ./test-results
+          path: ./test-results/results.xml

@@ -115,6 +115,13 @@ const config: HardhatUserConfig = {
   },
   mocha: {
     timeout: 1000000,
+    reporter: 'mocha-multi-reporters',
+    reporterOptions: {
+      reporterEnabled: 'spec, mocha-junit-reporter',
+      mochaJunitReporterReporterOptions: {
+        mochaFile: './test-results/results.xml',
+      },
+    },
   },
   contractSizer: {
     alphaSort: false,

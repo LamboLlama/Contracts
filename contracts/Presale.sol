@@ -7,9 +7,9 @@ import {ReentrancyGuard} from "@openzeppelin/contracts/security/ReentrancyGuard.
 
 contract Presale is Ownable, ReentrancyGuard {
     struct Contribution {
-        uint amount; // Actual ETH invested
-        uint effectiveAmount; // Effective ETH after bonus
-        uint claimedBonusTokens; // Bonus tokens already claimed
+        uint256 amount; // Actual ETH invested
+        uint256 effectiveAmount; // Effective ETH after bonus
+        uint256 claimedBonusTokens; // Bonus tokens already claimed
         bool claimed; // Whether immediate tokens have been claimed
     }
 
@@ -28,32 +28,32 @@ contract Presale is Ownable, ReentrancyGuard {
     error WhitelistPeriodNotStarted();
     error WhitelistPeriodEnded();
 
-    event TokensDeposited(uint amount);
-    event DepositReceived(address indexed user, uint amount, uint effectiveAmount);
-    event TokensClaimed(address indexed user, uint amount);
-    event BonusTokensClaimed(address indexed user, uint amount);
+    event TokensDeposited(uint256 amount);
+    event DepositReceived(address indexed user, uint256 amount, uint256 effectiveAmount);
+    event TokensClaimed(address indexed user, uint256 amount);
+    event BonusTokensClaimed(address indexed user, uint256 amount);
     event AddressWhitelisted(address indexed user);
     event AddressRemovedFromWhitelist(address indexed user);
 
-    uint public constant ONE_PERCENT = 10 ** 27;
-    uint public constant ONE_HUNDRED_PERCENT = 100 * ONE_PERCENT;
+    uint256 public constant ONE_PERCENT = 10 ** 27;
+    uint256 public constant ONE_HUNDRED_PERCENT = 100 * ONE_PERCENT;
 
     IERC20 public token;
-    uint public fundingStartTime;
-    uint public fundingEndTime;
+    uint256 public fundingStartTime;
+    uint256 public fundingEndTime;
 
-    uint public claimStartTime;
-    uint public vestingEndTime; // 1 month after claimStartTime
+    uint256 public claimStartTime;
+    uint256 public vestingEndTime; // 1 month after claimStartTime
 
-    uint public whitelistStartTime; // Start time for whitelist presale
-    uint public whitelistEndTime; // End time for whitelist presale
+    uint256 public whitelistStartTime; // Start time for whitelist presale
+    uint256 public whitelistEndTime; // End time for whitelist presale
 
-    uint public totalEth; // Actual ETH deposited
-    uint public totalEthEffective; // Effective ETH after bonus
-    uint public totalTokensForSale;
+    uint256 public totalEth; // Actual ETH deposited
+    uint256 public totalEthEffective; // Effective ETH after bonus
+    uint256 public totalTokensForSale;
 
-    uint[] public bonusRates;
-    uint[] public bonusThresholds;
+    uint256[] public bonusRates;
+    uint256[] public bonusThresholds;
 
     mapping(address => Contribution) public contributions;
     mapping(address => bool) public whitelist; // Whitelist mapping
@@ -70,12 +70,12 @@ contract Presale is Ownable, ReentrancyGuard {
 
     constructor(
         IERC20 _token,
-        uint _whitelistStartTime,
-        uint _whitelistEndTime,
-        uint _fundingStartTime,
-        uint _fundingEndTime,
-        uint _claimStartTime,
-        uint _totalTokensForSale,
+        uint256 _whitelistStartTime,
+        uint256 _whitelistEndTime,
+        uint256 _fundingStartTime,
+        uint256 _fundingEndTime,
+        uint256 _claimStartTime,
+        uint256 _totalTokensForSale,
         address payable _fundsWallet
     ) {
         if (_whitelistEndTime <= _whitelistStartTime) revert InvalidWHitelistPeriod();
@@ -98,7 +98,7 @@ contract Presale is Ownable, ReentrancyGuard {
 
         // Initialize bonus thresholds and rates
         bonusRates = [40 * ONE_PERCENT, 30 * ONE_PERCENT, 15 * ONE_PERCENT, 0];
-        bonusThresholds = [15 ether, 45 ether, 90 ether, type(uint).max];
+        bonusThresholds = [15 ether, 45 ether, 90 ether, type(uint256).max];
     }
 
     function depositTokens() external onlyOwner {
@@ -109,14 +109,14 @@ contract Presale is Ownable, ReentrancyGuard {
     }
 
     function whitelistAddresses(address[] calldata _users) external onlyOwner {
-        for (uint i = 0; i < _users.length; i++) {
+        for (uint256 i = 0; i < _users.length; i++) {
             whitelist[_users[i]] = true;
             emit AddressWhitelisted(_users[i]);
         }
     }
 
     function removeWhitelistAddresses(address[] calldata _users) external onlyOwner {
-        for (uint i = 0; i < _users.length; i++) {
+        for (uint256 i = 0; i < _users.length; i++) {
             whitelist[_users[i]] = false;
             emit AddressRemovedFromWhitelist(_users[i]);
         }
@@ -135,25 +135,25 @@ contract Presale is Ownable, ReentrancyGuard {
             revert NotInFundingPeriod();
         }
 
-        uint remainingDeposit = msg.value;
-        uint effectiveAmount;
-        uint totalEthAfter = totalEth;
+        uint256 remainingDeposit = msg.value;
+        uint256 effectiveAmount;
+        uint256 totalEthAfter = totalEth;
 
-        for (uint i = 0; i < bonusThresholds.length; i++) {
-            uint currentTreshold = bonusThresholds[i];
-            uint currentBonusRate = bonusRates[i];
+        for (uint256 i = 0; i < bonusThresholds.length; i++) {
+            uint256 currentTreshold = bonusThresholds[i];
+            uint256 currentBonusRate = bonusRates[i];
 
             if (totalEthAfter >= currentTreshold) {
                 continue;
             }
 
-            uint remainingCapacity = currentTreshold - totalEthAfter;
+            uint256 remainingCapacity = currentTreshold - totalEthAfter;
 
-            uint amountInThisThreshold = remainingDeposit <= remainingCapacity
+            uint256 amountInThisThreshold = remainingDeposit <= remainingCapacity
                 ? remainingDeposit
                 : remainingCapacity;
 
-            uint bonusAmount = (amountInThisThreshold * currentBonusRate) / ONE_HUNDRED_PERCENT;
+            uint256 bonusAmount = (amountInThisThreshold * currentBonusRate) / ONE_HUNDRED_PERCENT;
             effectiveAmount += amountInThisThreshold + bonusAmount;
             totalEthAfter += amountInThisThreshold;
             remainingDeposit -= amountInThisThreshold;
@@ -182,7 +182,7 @@ contract Presale is Ownable, ReentrancyGuard {
             revert NoContributionsToClaim();
 
         if (!userContribution.claimed) {
-            uint immediateTokens = (userContribution.amount * totalTokensForSale) /
+            uint256 immediateTokens = (userContribution.amount * totalTokensForSale) /
                 totalEthEffective;
 
             userContribution.claimed = true;
@@ -192,10 +192,10 @@ contract Presale is Ownable, ReentrancyGuard {
             emit TokensClaimed(msg.sender, immediateTokens);
         }
 
-        uint bonusTokens = userContribution.effectiveAmount - userContribution.amount;
+        uint256 bonusTokens = userContribution.effectiveAmount - userContribution.amount;
         if (bonusTokens > 0) {
-            uint vestedAmount = _vestedBonusTokens(bonusTokens);
-            uint claimableAmount = vestedAmount - userContribution.claimedBonusTokens;
+            uint256 vestedAmount = _vestedBonusTokens(bonusTokens);
+            uint256 claimableAmount = vestedAmount - userContribution.claimedBonusTokens;
 
             if (claimableAmount > 0) {
                 userContribution.claimedBonusTokens += claimableAmount;
@@ -207,14 +207,14 @@ contract Presale is Ownable, ReentrancyGuard {
         }
     }
 
-    function _vestedBonusTokens(uint bonusTokens) internal view returns (uint) {
+    function _vestedBonusTokens(uint256 bonusTokens) internal view returns (uint256) {
         if (block.timestamp >= vestingEndTime) {
             return bonusTokens;
         } else {
-            uint vestingDuration = vestingEndTime - claimStartTime;
-            uint timeElapsed = block.timestamp - claimStartTime;
+            uint256 vestingDuration = vestingEndTime - claimStartTime;
+            uint256 timeElapsed = block.timestamp - claimStartTime;
 
-            uint vestedAmount = (bonusTokens * timeElapsed) / vestingDuration;
+            uint256 vestedAmount = (bonusTokens * timeElapsed) / vestingDuration;
             return vestedAmount;
         }
     }

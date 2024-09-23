@@ -14,6 +14,7 @@ describe("Airdrop", function () {
   let addr3: SignerWithAddress;
   let claimPeriodStart: number;
   let claimPeriodEnd: number;
+  const VESTING_PERIOD = 180 * 24 * 60 * 60; // 6 months in seconds
   const reverter = new Reverter();
 
   before(async () => {
@@ -24,7 +25,7 @@ describe("Airdrop", function () {
     await token.deployed();
 
     claimPeriodStart = (await time.latest()) + 1000;
-    claimPeriodEnd = claimPeriodStart + 10000;
+    claimPeriodEnd = claimPeriodStart + VESTING_PERIOD + 10000;
 
     const Airdrop = await ethers.getContractFactory("Airdrop");
     airdrop = (await Airdrop.deploy(
@@ -58,14 +59,14 @@ describe("Airdrop", function () {
       const Airdrop = await ethers.getContractFactory("Airdrop");
       await expect(
         Airdrop.deploy(ethers.constants.AddressZero, owner.address, claimPeriodStart, claimPeriodEnd)
-      ).to.be.revertedWith("Airdrop: zero token address");
+      ).to.be.revertedWithCustomError(airdrop, "ZeroTokenAddress");
     });
 
     it("Should not allow zero address for owner", async () => {
       const Airdrop = await ethers.getContractFactory("Airdrop");
       await expect(
         Airdrop.deploy(token.address, ethers.constants.AddressZero, claimPeriodStart, claimPeriodEnd)
-      ).to.be.revertedWith("Airdrop: zero owner address");
+      ).to.be.revertedWithCustomError(airdrop, "ZeroOwnerAddress");
     });
 
     it("Should not allow past start date", async () => {
@@ -73,14 +74,14 @@ describe("Airdrop", function () {
       const Airdrop = await ethers.getContractFactory("Airdrop");
       await expect(
         Airdrop.deploy(token.address, owner.address, pastTimestamp, claimPeriodEnd)
-      ).to.be.revertedWith("Airdrop: start should be in the future");
+      ).to.be.revertedWithCustomError(airdrop, "ClaimStartInThePast");
     });
 
     it("Should not allow end date before start date", async () => {
       const Airdrop = await ethers.getContractFactory("Airdrop");
       await expect(
         Airdrop.deploy(token.address, owner.address, claimPeriodEnd, claimPeriodStart)
-      ).to.be.revertedWith("Airdrop: start should be before end");
+      ).to.be.revertedWithCustomError(airdrop, "ClaimEndBeforeStart");
     });
   });
 
@@ -98,47 +99,85 @@ describe("Airdrop", function () {
     });
 
     it("Should not allow setting recipients with different array lengths", async () => {
-      await expect(airdrop.setRecipients([addr1.address], [100, 200])).to.be.revertedWith(
-        "Airdrop: invalid array length"
+      await expect(airdrop.setRecipients([addr1.address], [100, 200])).to.be.revertedWithCustomError(
+        airdrop,
+        "InvalidArrayLength"
       );
     });
 
     it("Should not allow setting a recipient more than once", async () => {
       await airdrop.setRecipients([addr1.address], [100]);
-      await expect(airdrop.setRecipients([addr1.address], [200])).to.be.revertedWith(
-        "Airdrop: recipient already set"
+      await expect(airdrop.setRecipients([addr1.address], [200])).to.be.revertedWithCustomError(
+        airdrop,
+        "RecipientAlreadySet"
       );
     });
   });
 
-  describe("Claim", function () {
+  describe("Claim with vesting", function () {
     beforeEach(async () => {
       await token.mint(airdrop.address, 1000);
       await airdrop.setRecipients([addr1.address, addr2.address], [100, 200]);
     });
 
-    it("Should allow recipients to claim tokens after start period", async () => {
+    it("Should allow recipients to claim vested tokens after start period", async () => {
       await time.increaseTo(claimPeriodStart + 1);
 
-      await airdrop.connect(addr1).claim();
-      expect(await token.balanceOf(addr1.address)).to.equal(100);
-      expect(await airdrop.claimableTokens(addr1.address)).to.equal(0);
+      // Advance time to 1/3rd of the vesting period (2 months)
+      const timePassed = VESTING_PERIOD / 3;
+      await time.increase(timePassed);
+
+      // Call claim and retrieve the block timestamp at the point of claim
+      const tx = await airdrop.connect(addr1).claim();
+      const receipt = await tx.wait();
+      const claimBlockTimestamp = (await ethers.provider.getBlock(receipt.blockNumber)).timestamp;
+
+      // Now calculate vested amount based on the exact timestamp from the block
+      const vestedAmount1 = Math.floor((100 * (claimBlockTimestamp - claimPeriodStart)) / VESTING_PERIOD);
+
+      // Assert the exact amount of tokens claimed
+      expect(await token.balanceOf(addr1.address)).to.equal(vestedAmount1);
+      expect(await airdrop.claimableTokens(addr1.address)).to.equal(100);
     });
 
     it("Should not allow recipients to claim tokens before start period", async () => {
-      await expect(airdrop.connect(addr1).claim()).to.be.revertedWith("Airdrop: claim not started");
+      await expect(airdrop.connect(addr1).claim()).to.be.revertedWithCustomError(airdrop, "ClaimNotStarted");
+    });
+
+    it("Should not allow recipients to claim more than the vested amount", async () => {
+      await time.increaseTo(claimPeriodStart + 1);
+
+      // Advance time to halfway through the vesting period (3 months)
+      const timePassed = VESTING_PERIOD / 2;
+      await time.increase(timePassed);
+
+      const vestedAmount1 = Math.floor((100 * timePassed) / VESTING_PERIOD); // 50% vested
+
+      await airdrop.connect(addr1).claim();
+      expect(await token.balanceOf(addr1.address)).to.equal(vestedAmount1);
+
+      // Claim again without advancing time
+      await expect(airdrop.connect(addr1).claim()).to.be.revertedWithCustomError(airdrop, "NothingVestedToClaim");
+    });
+
+    it("Should allow recipients to claim fully vested tokens at end of vesting period", async () => {
+      await time.increaseTo(claimPeriodStart + VESTING_PERIOD);
+
+      await airdrop.connect(addr1).claim();
+      expect(await token.balanceOf(addr1.address)).to.equal(100);
+      expect(await airdrop.claimableTokens(addr1.address)).to.equal(100);
     });
 
     it("Should not allow recipients to claim tokens after end period", async () => {
       await time.increaseTo(claimPeriodEnd + 1);
 
-      await expect(airdrop.connect(addr1).claim()).to.be.revertedWith("Airdrop: claim ended");
+      await expect(airdrop.connect(addr1).claim()).to.be.revertedWithCustomError(airdrop, "ClaimEnded");
     });
 
     it("Should not allow recipients to claim tokens if they have none", async () => {
       await time.increaseTo(claimPeriodStart + 1);
 
-      await expect(airdrop.connect(addr3).claim()).to.be.revertedWith("Airdrop: nothing to claim");
+      await expect(airdrop.connect(addr3).claim()).to.be.revertedWithCustomError(airdrop, "NothingToClaim");
     });
   });
 

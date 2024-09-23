@@ -5,13 +5,28 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 
 contract Airdrop is Ownable {
-    IERC20 public immutable token;
+    IERC20 public token;
     mapping(address => uint256) public claimableTokens;
+    mapping(address => uint256) public claimedTokens; // track claimed tokens
     uint256 public totalClaimable;
-    uint256 public immutable claimPeriodStart;
-    uint256 public immutable claimPeriodEnd;
+    uint256 public claimPeriodStart;
+    uint256 public claimPeriodEnd;
+
+    uint256 public constant VESTING_PERIOD = 180 days; // 6 months
 
     event HasClaimed(address indexed recipient, uint256 amount);
+
+    // Custom errors
+    error ZeroTokenAddress();
+    error ZeroOwnerAddress();
+    error ClaimStartInThePast();
+    error ClaimEndBeforeStart();
+    error InvalidArrayLength();
+    error RecipientAlreadySet();
+    error ClaimNotStarted();
+    error ClaimEnded();
+    error NothingToClaim();
+    error NothingVestedToClaim();
 
     constructor(
         IERC20 token_,
@@ -19,10 +34,10 @@ contract Airdrop is Ownable {
         uint256 claimPeriodStart_,
         uint256 claimPeriodEnd_
     ) Ownable() {
-        require(address(token_) != address(0), "Airdrop: zero token address");
-        require(owner_ != address(0), "Airdrop: zero owner address");
-        require(claimPeriodStart_ > block.timestamp, "Airdrop: start should be in the future");
-        require(claimPeriodEnd_ > claimPeriodStart_, "Airdrop: start should be before end");
+        if (address(token_) == address(0)) revert ZeroTokenAddress();
+        if (owner_ == address(0)) revert ZeroOwnerAddress();
+        if (claimPeriodStart_ <= block.timestamp) revert ClaimStartInThePast();
+        if (claimPeriodEnd_ <= claimPeriodStart_) revert ClaimEndBeforeStart();
 
         token = token_;
         claimPeriodStart = claimPeriodStart_;
@@ -34,10 +49,10 @@ contract Airdrop is Ownable {
         address[] calldata recipients_,
         uint256[] calldata claimableAmount_
     ) external onlyOwner {
-        require(recipients_.length == claimableAmount_.length, "Airdrop: invalid array length");
+        if (recipients_.length != claimableAmount_.length) revert InvalidArrayLength();
         uint256 sum = totalClaimable;
         for (uint256 i = 0; i < recipients_.length; i++) {
-            require(claimableTokens[recipients_[i]] == 0, "Airdrop: recipient already set");
+            if (claimableTokens[recipients_[i]] != 0) revert RecipientAlreadySet();
             claimableTokens[recipients_[i]] = claimableAmount_[i];
             unchecked {
                 sum += claimableAmount_[i];
@@ -48,16 +63,25 @@ contract Airdrop is Ownable {
     }
 
     function claim() public {
-        require(block.timestamp >= claimPeriodStart, "Airdrop: claim not started");
-        require(block.timestamp < claimPeriodEnd, "Airdrop: claim ended");
+        if (block.timestamp < claimPeriodStart) revert ClaimNotStarted();
+        if (block.timestamp >= claimPeriodEnd) revert ClaimEnded();
 
-        uint256 amount = claimableTokens[msg.sender];
-        require(amount > 0, "Airdrop: nothing to claim");
+        uint256 totalClaimableAmount = claimableTokens[msg.sender];
+        if (totalClaimableAmount == 0) revert NothingToClaim();
 
-        claimableTokens[msg.sender] = 0;
+        // Calculate the vested amount based on time passed
+        uint256 timePassed = block.timestamp - claimPeriodStart;
+        uint256 vestedAmount = (totalClaimableAmount * timePassed) / VESTING_PERIOD;
 
-        token.transfer(msg.sender, amount);
-        emit HasClaimed(msg.sender, amount);
+        // Ensure the user doesn't claim more than the total vested amount
+        uint256 claimableNow = vestedAmount - claimedTokens[msg.sender];
+        if (claimableNow == 0) revert NothingVestedToClaim();
+
+        // Update claimedTokens and transfer the claimable amount
+        claimedTokens[msg.sender] += claimableNow;
+        token.transfer(msg.sender, claimableNow);
+
+        emit HasClaimed(msg.sender, claimableNow);
     }
 
     function withdraw(IERC20 token_, uint256 amount_) external onlyOwner {

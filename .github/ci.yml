@@ -3,10 +3,11 @@ name: Run Tests
 on:
   push:
     branches:
-      - main # Change this to the branch where you want to run the tests
+      - main # You can adjust this to your branch
   pull_request:
     branches:
-      - main # Also run tests on pull requests to the main branch
+      - main
+  workflow_dispatch: # Add this line to enable manual triggering
 
 jobs:
   test:
@@ -14,7 +15,7 @@ jobs:
 
     strategy:
       matrix:
-        node-version: [16.x, 18.x] # You can specify which Node.js versions to test against
+        node-version: [16.x, 18.x]
 
     steps:
       - name: Checkout repository

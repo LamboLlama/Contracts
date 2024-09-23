@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.22;
 
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 
 contract Vesting is Ownable {
     struct VestingSchedule {
@@ -13,18 +13,28 @@ contract Vesting is Ownable {
     }
 
     bool public configuratedAndFixed;
-    IERC20 public immutable token;
+    IERC20 public token;
     mapping(address => VestingSchedule) public vestingSchedules;
 
     event TokensClaimed(address indexed beneficiary, uint256 amount);
 
+    // Custom Errors
+    error ZeroTokenAddress();
+    error ZeroBeneficiaryAddress();
+    error ZeroTotalAmount();
+    error ZeroDuration();
+    error VestingNotStarted();
+    error NoTokensToClaim();
+    error ContractFixed();
+    error WithdrawVestingTokenNotAllowed();
+
     constructor(IERC20 token_) {
-        require(address(token_) != address(0), "Vesting: zero token address");
+        if (address(token_) == address(0)) revert ZeroTokenAddress();
         token = token_;
     }
 
     modifier onlyBeforeConfiguratedAndFixed() {
-        require(!configuratedAndFixed, "Vesting: not available after the contract is fixed");
+        if (configuratedAndFixed) revert ContractFixed();
         _;
     }
 
@@ -37,8 +47,7 @@ contract Vesting is Ownable {
     }
 
     function withdrawStuckERC20(IERC20 token_) external onlyOwner {
-        require(address(token_) != address(token), "Vesting: Cannot withdraw vesting token");
-
+        if (address(token_) == address(token)) revert WithdrawVestingTokenNotAllowed();
         token_.transfer(msg.sender, token_.balanceOf(address(this)));
     }
 
@@ -48,9 +57,9 @@ contract Vesting is Ownable {
         uint256 start_,
         uint256 duration_
     ) external onlyOwner onlyBeforeConfiguratedAndFixed {
-        require(beneficiary_ != address(0), "Vesting: zero beneficiary address");
-        require(totalAmount_ > 0, "Vesting: zero total amount");
-        require(duration_ > 0, "Vesting: zero duration");
+        if (beneficiary_ == address(0)) revert ZeroBeneficiaryAddress();
+        if (totalAmount_ == 0) revert ZeroTotalAmount();
+        if (duration_ == 0) revert ZeroDuration();
 
         vestingSchedules[beneficiary_] = VestingSchedule({
             totalAmount: totalAmount_,
@@ -63,7 +72,7 @@ contract Vesting is Ownable {
     function claimTokens() external {
         VestingSchedule storage schedule_ = vestingSchedules[msg.sender];
 
-        require(block.timestamp > schedule_.start, "Vesting: vesting not started");
+        if (block.timestamp <= schedule_.start) revert VestingNotStarted();
 
         uint256 elapsedTime_ = block.timestamp - schedule_.start;
 
@@ -74,7 +83,7 @@ contract Vesting is Ownable {
         uint256 vestedAmount_ = (schedule_.totalAmount * elapsedTime_) / schedule_.duration;
         uint256 claimableAmount_ = vestedAmount_ - schedule_.claimedAmount;
 
-        require(claimableAmount_ > 0, "Vesting: no tokens to claim");
+        if (claimableAmount_ == 0) revert NoTokensToClaim();
 
         schedule_.claimedAmount += claimableAmount_;
         token.transfer(msg.sender, claimableAmount_);

@@ -37,7 +37,7 @@ describe("Vesting", function () {
 
     it("Should not allow zero address for token", async () => {
       const Vesting = await ethers.getContractFactory("Vesting");
-      await expect(Vesting.deploy(ethers.constants.AddressZero)).to.be.revertedWith("Vesting: zero token address");
+      await expect(Vesting.deploy(ethers.constants.AddressZero)).to.be.revertedWithCustomError(vesting, "ZeroTokenAddress");
     });
   });
 
@@ -56,7 +56,7 @@ describe("Vesting", function () {
     it("Should not allow owner to withdraw tokens after contract is fixed", async function () {
       await token.mint(vesting.address, 1000);
       await vesting.fix();
-      await expect(vesting.withdraw()).to.be.revertedWith("Vesting: not available after the contract is fixed");
+      await expect(vesting.withdraw()).to.be.revertedWithCustomError(vesting, "ContractFixed");
     });
   });
 
@@ -76,8 +76,9 @@ describe("Vesting", function () {
 
     it("Should not allow owner to withdraw vesting token", async function () {
       await token.mint(vesting.address, 1000);
-      await expect(vesting.withdrawStuckERC20(token.address)).to.be.revertedWith(
-        "Vesting: Cannot withdraw vesting token"
+      await expect(vesting.withdrawStuckERC20(token.address)).to.be.revertedWithCustomError(
+        vesting,
+        "WithdrawVestingTokenNotAllowed"
       );
     });
 
@@ -123,23 +124,26 @@ describe("Vesting", function () {
     it("Should not allow setting zero address for beneficiary", async () => {
       const start_ = (await time.latest()) + 1000;
       const duration_ = 10000;
-      await expect(vesting.setVestingSchedule(ethers.constants.AddressZero, 100, start_, duration_)).to.be.revertedWith(
-        "Vesting: zero beneficiary address"
+      await expect(vesting.setVestingSchedule(ethers.constants.AddressZero, 100, start_, duration_)).to.be.revertedWithCustomError(
+        vesting,
+        "ZeroBeneficiaryAddress"
       );
     });
 
     it("Should not allow setting zero total amount", async () => {
       const start_ = (await time.latest()) + 1000;
       const duration_ = 10000;
-      await expect(vesting.setVestingSchedule(addr1.address, 0, start_, duration_)).to.be.revertedWith(
-        "Vesting: zero total amount"
+      await expect(vesting.setVestingSchedule(addr1.address, 0, start_, duration_)).to.be.revertedWithCustomError(
+        vesting,
+        "ZeroTotalAmount"
       );
     });
 
     it("Should not allow setting zero duration", async () => {
       const start_ = (await time.latest()) + 1000;
-      await expect(vesting.setVestingSchedule(addr1.address, 100, start_, 0)).to.be.revertedWith(
-        "Vesting: zero duration"
+      await expect(vesting.setVestingSchedule(addr1.address, 100, start_, 0)).to.be.revertedWithCustomError(
+        vesting,
+        "ZeroDuration"
       );
     });
 
@@ -149,8 +153,9 @@ describe("Vesting", function () {
 
       await vesting.fix();
 
-      await expect(vesting.setVestingSchedule(addr1.address, 100, start_, duration_)).to.be.revertedWith(
-        "Vesting: not available after the contract is fixed"
+      await expect(vesting.setVestingSchedule(addr1.address, 100, start_, duration_)).to.be.revertedWithCustomError(
+        vesting,
+        "ContractFixed"
       );
     });
   });
@@ -230,7 +235,7 @@ describe("Vesting", function () {
     });
 
     it("Should not allow beneficiaries to claim tokens before start period", async () => {
-      await expect(vesting.connect(addr1).claimTokens()).to.be.revertedWith("Vesting: vesting not started");
+      await expect(vesting.connect(addr1).claimTokens()).to.be.revertedWithCustomError(vesting, "VestingNotStarted");
     });
 
     it("Should not allow beneficiaries to claim more tokens than vested", async () => {
@@ -240,7 +245,7 @@ describe("Vesting", function () {
       await vesting.connect(addr1).claimTokens();
       expect(await token.balanceOf(addr1.address)).to.equal(50);
 
-      await expect(vesting.connect(addr1).claimTokens()).to.be.revertedWith("Vesting: no tokens to claim");
+      await expect(vesting.connect(addr1).claimTokens()).to.be.revertedWithCustomError(vesting, "NoTokensToClaim");
     });
   });
 

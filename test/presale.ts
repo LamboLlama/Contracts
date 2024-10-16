@@ -262,7 +262,7 @@ describe('Presale Contract', function () {
 			const contributionAmount = ethers.utils.parseEther('10'); // 10 ETH
 			const initialFundsWalletBalance = await ethers.provider.getBalance(fundsWallet.address);
 
-			await presale.connect(investor1).contribute("0x0000000000000000000000000000000000000000000000000000000000000000", { value: contributionAmount });
+			await presale.connect(investor1).contribute(ethers.constants.HashZero, { value: contributionAmount });
 
 			expect(await presale.totalEth()).to.equal(contributionAmount);
 
@@ -275,7 +275,7 @@ describe('Presale Contract', function () {
 		});
 
 		it('should reject zero contributions', async function () {
-			await expect(presale.connect(investor1).contribute("0x0000000000000000000000000000000000000000000000000000000000000000", { value: 0 })).to.be.revertedWithCustomError(
+			await expect(presale.connect(investor1).contribute(ethers.constants.HashZero, { value: 0 })).to.be.revertedWithCustomError(
 				presale,
 				'TransferFailed'
 			);
@@ -287,7 +287,7 @@ describe('Presale Contract', function () {
 			await time.setNextBlockTimestamp(fundingStartTime.sub(1));
 
 			await expect(
-				presale.connect(investor1).contribute("0x0000000000000000000000000000000000000000000000000000000000000000", { value: ethers.utils.parseEther('1') })
+				presale.connect(investor1).contribute(ethers.constants.HashZero, { value: ethers.utils.parseEther('1') })
 			).to.be.revertedWithCustomError(presale, 'NotInFundingPeriod');
 		});
 
@@ -298,8 +298,8 @@ describe('Presale Contract', function () {
 			const contributionAmount1 = ethers.utils.parseEther('5');
 			const contributionAmount2 = ethers.utils.parseEther('10');
 
-			await presale.connect(investor1).contribute("0x0000000000000000000000000000000000000000000000000000000000000000", { value: contributionAmount1 });
-			await presale.connect(investor1).contribute("0x0000000000000000000000000000000000000000000000000000000000000000", { value: contributionAmount2 });
+			await presale.connect(investor1).contribute(ethers.constants.HashZero, { value: contributionAmount1 });
+			await presale.connect(investor1).contribute(ethers.constants.HashZero, { value: contributionAmount2 });
 
 			const contribution = await presale.contributions(investor1.address);
 			expect(contribution.amount).to.equal(contributionAmount1.add(contributionAmount2));
@@ -316,7 +316,7 @@ describe('Presale Contract', function () {
 
 			const expectedEffectiveAmount = calculate.effectiveAmount(contributionAmount, totalEthEffectiveBefore);
 
-			const tx = await presale.connect(investor1).contribute("0x0000000000000000000000000000000000000000000000000000000000000000", { value: contributionAmount });
+			const tx = await presale.connect(investor1).contribute(ethers.constants.HashZero, { value: contributionAmount });
 
 			const receipt = await tx.wait();
 
@@ -336,14 +336,14 @@ describe('Presale Contract', function () {
 			await time.increaseTo(fundingStartTime);
 			// Initial contribution to set totalEthEffectiveBefore
 			const initialContributionAmount = ethers.utils.parseEther('10'); // 10 ETH
-			await presale.connect(investor1).contribute("0x0000000000000000000000000000000000000000000000000000000000000000", { value: initialContributionAmount });
+			await presale.connect(investor1).contribute(ethers.constants.HashZero, { value: initialContributionAmount });
 
 			const totalEthEffectiveBefore = await presale.totalEthEffective();
 
 			const contributionAmount = ethers.utils.parseEther('40');
 			const expectedEffectiveAmount = calculate.effectiveAmount(contributionAmount, initialContributionAmount);
 
-			const tx = await presale.connect(investor2).contribute("0x0000000000000000000000000000000000000000000000000000000000000000", { value: contributionAmount });
+			const tx = await presale.connect(investor2).contribute(ethers.constants.HashZero, { value: contributionAmount });
 
 			const receipt = await tx.wait();
 
@@ -364,16 +364,16 @@ describe('Presale Contract', function () {
 			await time.increaseTo(fundingStartTime);
 			// Contributions to cross all thresholds
 			const initialContributionAmount = ethers.utils.parseEther('35'); // 35 ETH
-			await presale.connect(investor1).contribute("0x0000000000000000000000000000000000000000000000000000000000000000", { value: initialContributionAmount });
-			await presale.connect(investor2).contribute("0x0000000000000000000000000000000000000000000000000000000000000000", { value: initialContributionAmount });
-			await presale.connect(investor3).contribute("0x0000000000000000000000000000000000000000000000000000000000000000", { value: initialContributionAmount });
+			await presale.connect(investor1).contribute(ethers.constants.HashZero, { value: initialContributionAmount });
+			await presale.connect(investor2).contribute(ethers.constants.HashZero, { value: initialContributionAmount });
+			await presale.connect(investor3).contribute(ethers.constants.HashZero, { value: initialContributionAmount });
 
 			const totalEthEffectiveBefore = await presale.totalEthEffective();
 
 			const contributionAmount = BigNumber.from(ethers.utils.parseEther('105')); // 105 ETH
 			const expectedEffectiveAmount = calculate.effectiveAmount(contributionAmount, totalEthEffectiveBefore);
 
-			const tx = await presale.connect(investor2).contribute("0x0000000000000000000000000000000000000000000000000000000000000000", { value: contributionAmount });
+			const tx = await presale.connect(investor2).contribute(ethers.constants.HashZero, { value: contributionAmount });
 
 			const receipt = await tx.wait();
 
@@ -396,7 +396,7 @@ describe('Presale Contract', function () {
 			const contributionAmount = ethers.utils.parseEther('15'); // 15 ETH
 			const expectedEffectiveAmount = calculate.effectiveAmount(contributionAmount, ethers.BigNumber.from(0));
 
-			const tx = await presale.connect(investor1).contribute("0x0000000000000000000000000000000000000000000000000000000000000000", { value: contributionAmount });
+			const tx = await presale.connect(investor1).contribute(ethers.constants.HashZero, { value: contributionAmount });
 
 			const receipt = await tx.wait();
 
@@ -411,11 +411,11 @@ describe('Presale Contract', function () {
 			const fundingStartTime = await presale.fundingStartTime();
 			await time.increaseTo(fundingStartTime.add(1));
 			// Contribute to meet all thresholds
-			await presale.connect(investor1).contribute("0x0000000000000000000000000000000000000000000000000000000000000000", { value: ethers.utils.parseEther('90') });
+			await presale.connect(investor1).contribute(ethers.constants.HashZero, { value: ethers.utils.parseEther('90') });
 
 			const contributionAmount = ethers.utils.parseEther('95'); // Above all thresholds
 
-			const tx = await presale.connect(investor1).contribute("0x0000000000000000000000000000000000000000000000000000000000000000", { value: contributionAmount });
+			const tx = await presale.connect(investor1).contribute(ethers.constants.HashZero, { value: contributionAmount });
 
 			const receipt = await tx.wait();
 
@@ -429,7 +429,7 @@ describe('Presale Contract', function () {
 			await time.increaseTo(fundingEndTime.add(1));
 
 			await expect(
-				presale.connect(investor1).contribute("0x0000000000000000000000000000000000000000000000000000000000000000", { value: ethers.utils.parseEther('1') })
+				presale.connect(investor1).contribute(ethers.constants.HashZero, { value: ethers.utils.parseEther('1') })
 			).to.be.revertedWithCustomError(presale, 'NotInFundingPeriod');
 		});
 

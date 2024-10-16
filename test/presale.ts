@@ -4,6 +4,7 @@ import { BigNumber } from 'ethers';
 
 import { Account } from '@/test/helpers/account';
 import { Calculate } from '@/test/helpers/calculate';
+import { Whitelist } from '@/test/helpers/whitelist';
 
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { time } from '@nomicfoundation/hardhat-network-helpers';
@@ -12,25 +13,35 @@ import { ERC20Mock, Presale } from '@ethers-v5';
 describe('Presale Contract', function () {
 	const account = new Account();
 	const calculate = new Calculate();
+	const whitelist = new Whitelist();
 
 	let presale: Presale;
 	let token: ERC20Mock;
+
+
 	let whitelistStartTime: number;
 	let whitelistEndTime: number;
 	let fundingStartTime: number;
 	let fundingEndTime: number;
 	let claimStartTime: number;
+
 	let totalTokensForSale: BigNumber;
+
 	let owner: SignerWithAddress;
 	let fundsWallet: SignerWithAddress;
+	let whitelistSigner: SignerWithAddress;
+
 	let investor1: SignerWithAddress;
 	let investor2: SignerWithAddress;
 	let investor3: SignerWithAddress;
 	let investor4: SignerWithAddress;
+
+
+
 	let otherAccounts: SignerWithAddress[];
 
 	beforeEach(async function () {
-		[owner, fundsWallet, investor1, investor2, investor3, investor4, ...otherAccounts] = await ethers.getSigners();
+		[owner, fundsWallet, whitelistSigner, investor1, investor2, investor3, investor4, ...otherAccounts] = await ethers.getSigners();
 
 		await account.setBalance(investor1.address, ethers.utils.parseEther('10000000'));
 		await account.setBalance(investor2.address, ethers.utils.parseEther('10000000'));
@@ -52,7 +63,7 @@ describe('Presale Contract', function () {
 		fundingStartTime = whitelistEndTime + 10; // Starts in 10 seconds
 		fundingEndTime = fundingStartTime + 3600; // Ends in 1 hour
 		claimStartTime = fundingEndTime + 3600; // Claims start 1 hour after funding ends
-		totalTokensForSale = ethers.utils.parseUnits('12000000000000', 18); // 1,000,000 tokens
+		totalTokensForSale = ethers.utils.parseUnits('600000000', 18); // 600,000,000 tokens
 
 		presale = (await PresaleFactory.deploy(
 			token.address,
@@ -62,8 +73,10 @@ describe('Presale Contract', function () {
 			fundingEndTime,
 			claimStartTime,
 			totalTokensForSale,
-			fundsWallet.address
+			fundsWallet.address,
+			whitelistSigner.address,
 		)) as Presale;
+
 		await presale.deployed();
 
 		// Mint tokens to the owner for depositing into the presale contract
@@ -87,9 +100,10 @@ describe('Presale Contract', function () {
 			expect(fundingStartTime).to.equal((await presale.fundingStartTime()).toNumber());
 			expect(fundingEndTime).to.equal((await presale.fundingEndTime()).toNumber());
 			expect(claimStartTime).to.equal((await presale.claimStartTime()).toNumber());
-			expect(totalTokensForSale).to.equal(ethers.utils.parseUnits('12000000000000', 18));
+			expect(totalTokensForSale).to.equal(totalTokensForSale);
 			expect(await presale.owner()).to.equal(owner.address);
 			expect(await presale.fundsWallet()).to.equal(fundsWallet.address);
+			expect(await presale.whitelistSigner()).to.equal(whitelistSigner.address);
 		});
 
 		describe('Presale Constructor Checks', function () {
@@ -106,9 +120,10 @@ describe('Presale Contract', function () {
 						fundingEndTime,
 						claimStartTime,
 						totalTokensForSale,
-						fundsWallet.address
+						fundsWallet.address,
+						whitelistSigner.address
 					)
-				).to.be.revertedWithCustomError(presale, 'InvalidWHitelistPeriod');
+				).to.be.revertedWithCustomError(presale, 'InvalidWhitelistPeriod');
 			});
 
 			it('should revert if funding start time is before or equal to whitelist end time', async function () {
@@ -124,9 +139,10 @@ describe('Presale Contract', function () {
 						fundingEndTime,
 						claimStartTime,
 						totalTokensForSale,
-						fundsWallet.address
+						fundsWallet.address,
+						whitelistSigner.address
 					)
-				).to.be.revertedWithCustomError(presale, 'InvalidWHitelistPeriod');
+				).to.be.revertedWithCustomError(presale, 'InvalidWhitelistPeriod');
 			});
 
 			it('should revert if funding end time is before or equal to funding start time', async function () {
@@ -142,7 +158,8 @@ describe('Presale Contract', function () {
 						invalidFundingEndTime,
 						claimStartTime,
 						totalTokensForSale,
-						fundsWallet.address
+						fundsWallet.address,
+						whitelistSigner.address
 					)
 				).to.be.revertedWithCustomError(presale, 'InvalidFundingPeriod');
 			});
@@ -160,7 +177,8 @@ describe('Presale Contract', function () {
 						fundingEndTime,
 						invalidClaimStartTime,
 						totalTokensForSale,
-						fundsWallet.address
+						fundsWallet.address,
+						whitelistSigner.address
 					)
 				).to.be.revertedWithCustomError(presale, 'InvalidClaimPeriod');
 			});
@@ -178,7 +196,8 @@ describe('Presale Contract', function () {
 						fundingEndTime,
 						claimStartTime,
 						zeroTotalTokens,
-						fundsWallet.address
+						fundsWallet.address,
+						whitelistSigner.address
 					)
 				).to.be.revertedWithCustomError(presale, 'InvalidFundingPeriod');
 			});
@@ -196,38 +215,22 @@ describe('Presale Contract', function () {
 						fundingEndTime,
 						claimStartTime,
 						totalTokensForSale,
-						zeroAddress
+						zeroAddress,
+						whitelistSigner.address
 					)
 				).to.be.revertedWithCustomError(presale, 'TransferFailed');
 			});
 		});
 	});
 
-	describe('Whitelisting', function () {
-		it('should allow the owner to whitelist addresses', async function () {
-			await presale.connect(owner).whitelistAddresses([investor1.address, investor2.address]);
-			expect(await presale.whitelist(investor1.address)).to.be.true;
-			expect(await presale.whitelist(investor2.address)).to.be.true;
-		});
+	describe('Whitelisting Check', function () {
+		it('should verify if an address is whitelisted using signature', async function () {
+			const signature = await whitelist.generateWhitelistSignature(whitelistSigner, investor1);
+			expect(await presale.connect(investor1).isWhitelisted(signature)).to.be.true;
 
-		it('should allow the owner to remove addresses from the whitelist', async function () {
-			await presale.connect(owner).whitelistAddresses([investor1.address]);
-			expect(await presale.whitelist(investor1.address)).to.be.true;
-
-			await presale.connect(owner).removeWhitelistAddresses([investor1.address]);
-			expect(await presale.whitelist(investor1.address)).to.be.false;
-		});
-
-		it('should revert if non-owner tries to whitelist addresses', async function () {
-			await expect(presale.connect(investor1).whitelistAddresses([investor1.address])).to.be.revertedWith(
-				'Ownable: caller is not the owner'
-			);
-		});
-
-		it('should revert if non-owner tries to remove addresses from the whitelist', async function () {
-			await expect(presale.connect(investor1).removeWhitelistAddresses([investor1.address])).to.be.revertedWith(
-				'Ownable: caller is not the owner'
-			);
+			// Check that a random signature does not work
+			const fakeSignature = await whitelist.generateWhitelistSignature(whitelistSigner, investor2);
+			expect(await presale.connect(investor1).isWhitelisted(fakeSignature)).to.be.false;
 		});
 	});
 
@@ -235,7 +238,7 @@ describe('Presale Contract', function () {
 		it('should allow the owner to deposit tokens', async function () {
 			// The owner already deposited tokens in beforeEach
 			expect(await presale.tokensDeposited()).to.be.true;
-			expect(await token.balanceOf(presale.address)).to.equal(ethers.utils.parseUnits('12000000000000', 18));
+			expect(await token.balanceOf(presale.address)).to.equal(totalTokensForSale);
 		});
 
 		it('should not allow non-owners to deposit tokens', async function () {
@@ -259,7 +262,7 @@ describe('Presale Contract', function () {
 			const contributionAmount = ethers.utils.parseEther('10'); // 10 ETH
 			const initialFundsWalletBalance = await ethers.provider.getBalance(fundsWallet.address);
 
-			await presale.connect(investor1).contribute({ value: contributionAmount });
+			await presale.connect(investor1).contribute("0x0000000000000000000000000000000000000000000000000000000000000000", { value: contributionAmount });
 
 			expect(await presale.totalEth()).to.equal(contributionAmount);
 
@@ -272,7 +275,7 @@ describe('Presale Contract', function () {
 		});
 
 		it('should reject zero contributions', async function () {
-			await expect(presale.connect(investor1).contribute({ value: 0 })).to.be.revertedWithCustomError(
+			await expect(presale.connect(investor1).contribute("0x0000000000000000000000000000000000000000000000000000000000000000", { value: 0 })).to.be.revertedWithCustomError(
 				presale,
 				'TransferFailed'
 			);
@@ -284,7 +287,7 @@ describe('Presale Contract', function () {
 			await time.setNextBlockTimestamp(fundingStartTime.sub(1));
 
 			await expect(
-				presale.connect(investor1).contribute({ value: ethers.utils.parseEther('1') })
+				presale.connect(investor1).contribute("0x0000000000000000000000000000000000000000000000000000000000000000", { value: ethers.utils.parseEther('1') })
 			).to.be.revertedWithCustomError(presale, 'NotInFundingPeriod');
 		});
 
@@ -295,8 +298,8 @@ describe('Presale Contract', function () {
 			const contributionAmount1 = ethers.utils.parseEther('5');
 			const contributionAmount2 = ethers.utils.parseEther('10');
 
-			await presale.connect(investor1).contribute({ value: contributionAmount1 });
-			await presale.connect(investor1).contribute({ value: contributionAmount2 });
+			await presale.connect(investor1).contribute("0x0000000000000000000000000000000000000000000000000000000000000000", { value: contributionAmount1 });
+			await presale.connect(investor1).contribute("0x0000000000000000000000000000000000000000000000000000000000000000", { value: contributionAmount2 });
 
 			const contribution = await presale.contributions(investor1.address);
 			expect(contribution.amount).to.equal(contributionAmount1.add(contributionAmount2));
@@ -313,7 +316,7 @@ describe('Presale Contract', function () {
 
 			const expectedEffectiveAmount = calculate.effectiveAmount(contributionAmount, totalEthEffectiveBefore);
 
-			const tx = await presale.connect(investor1).contribute({ value: contributionAmount });
+			const tx = await presale.connect(investor1).contribute("0x0000000000000000000000000000000000000000000000000000000000000000", { value: contributionAmount });
 
 			const receipt = await tx.wait();
 
@@ -333,14 +336,14 @@ describe('Presale Contract', function () {
 			await time.increaseTo(fundingStartTime);
 			// Initial contribution to set totalEthEffectiveBefore
 			const initialContributionAmount = ethers.utils.parseEther('10'); // 10 ETH
-			await presale.connect(investor1).contribute({ value: initialContributionAmount });
+			await presale.connect(investor1).contribute("0x0000000000000000000000000000000000000000000000000000000000000000", { value: initialContributionAmount });
 
 			const totalEthEffectiveBefore = await presale.totalEthEffective();
 
 			const contributionAmount = ethers.utils.parseEther('40');
 			const expectedEffectiveAmount = calculate.effectiveAmount(contributionAmount, initialContributionAmount);
 
-			const tx = await presale.connect(investor2).contribute({ value: contributionAmount });
+			const tx = await presale.connect(investor2).contribute("0x0000000000000000000000000000000000000000000000000000000000000000", { value: contributionAmount });
 
 			const receipt = await tx.wait();
 
@@ -361,16 +364,16 @@ describe('Presale Contract', function () {
 			await time.increaseTo(fundingStartTime);
 			// Contributions to cross all thresholds
 			const initialContributionAmount = ethers.utils.parseEther('35'); // 35 ETH
-			await presale.connect(investor1).contribute({ value: initialContributionAmount });
-			await presale.connect(investor2).contribute({ value: initialContributionAmount });
-			await presale.connect(investor3).contribute({ value: initialContributionAmount });
+			await presale.connect(investor1).contribute("0x0000000000000000000000000000000000000000000000000000000000000000", { value: initialContributionAmount });
+			await presale.connect(investor2).contribute("0x0000000000000000000000000000000000000000000000000000000000000000", { value: initialContributionAmount });
+			await presale.connect(investor3).contribute("0x0000000000000000000000000000000000000000000000000000000000000000", { value: initialContributionAmount });
 
 			const totalEthEffectiveBefore = await presale.totalEthEffective();
 
 			const contributionAmount = BigNumber.from(ethers.utils.parseEther('105')); // 105 ETH
 			const expectedEffectiveAmount = calculate.effectiveAmount(contributionAmount, totalEthEffectiveBefore);
 
-			const tx = await presale.connect(investor2).contribute({ value: contributionAmount });
+			const tx = await presale.connect(investor2).contribute("0x0000000000000000000000000000000000000000000000000000000000000000", { value: contributionAmount });
 
 			const receipt = await tx.wait();
 
@@ -393,7 +396,7 @@ describe('Presale Contract', function () {
 			const contributionAmount = ethers.utils.parseEther('15'); // 15 ETH
 			const expectedEffectiveAmount = calculate.effectiveAmount(contributionAmount, ethers.BigNumber.from(0));
 
-			const tx = await presale.connect(investor1).contribute({ value: contributionAmount });
+			const tx = await presale.connect(investor1).contribute("0x0000000000000000000000000000000000000000000000000000000000000000", { value: contributionAmount });
 
 			const receipt = await tx.wait();
 
@@ -408,11 +411,11 @@ describe('Presale Contract', function () {
 			const fundingStartTime = await presale.fundingStartTime();
 			await time.increaseTo(fundingStartTime.add(1));
 			// Contribute to meet all thresholds
-			await presale.connect(investor1).contribute({ value: ethers.utils.parseEther('90') });
+			await presale.connect(investor1).contribute("0x0000000000000000000000000000000000000000000000000000000000000000", { value: ethers.utils.parseEther('90') });
 
 			const contributionAmount = ethers.utils.parseEther('95'); // Above all thresholds
 
-			const tx = await presale.connect(investor1).contribute({ value: contributionAmount });
+			const tx = await presale.connect(investor1).contribute("0x0000000000000000000000000000000000000000000000000000000000000000", { value: contributionAmount });
 
 			const receipt = await tx.wait();
 
@@ -426,7 +429,7 @@ describe('Presale Contract', function () {
 			await time.increaseTo(fundingEndTime.add(1));
 
 			await expect(
-				presale.connect(investor1).contribute({ value: ethers.utils.parseEther('1') })
+				presale.connect(investor1).contribute("0x0000000000000000000000000000000000000000000000000000000000000000", { value: ethers.utils.parseEther('1') })
 			).to.be.revertedWithCustomError(presale, 'NotInFundingPeriod');
 		});
 
@@ -448,12 +451,12 @@ describe('Presale Contract', function () {
 
 	describe('Whitelist contributions', function () {
 		it('should accept contributions during whitelist period', async function () {
-			await presale.connect(owner).whitelistAddresses([investor1.address]);
+
 
 			const contributionAmount = ethers.utils.parseEther('10'); // 10 ETH
 			const initialFundsWalletBalance = await ethers.provider.getBalance(fundsWallet.address);
-
-			await presale.connect(investor1).contribute({ value: contributionAmount });
+			const signature = await whitelist.generateWhitelistSignature(whitelistSigner, investor1);
+			await presale.connect(investor1).contribute(signature, { value: contributionAmount });
 
 			expect(await presale.totalEth()).to.equal(contributionAmount);
 
@@ -466,8 +469,8 @@ describe('Presale Contract', function () {
 		});
 
 		it('should reject zero contributions', async function () {
-			await presale.connect(owner).whitelistAddresses([investor1.address]);
-			await expect(presale.connect(investor1).contribute({ value: 0 })).to.be.revertedWithCustomError(
+			const signature = await whitelist.generateWhitelistSignature(whitelistSigner, investor1);
+			await expect(presale.connect(investor1).contribute(signature, { value: 0 })).to.be.revertedWithCustomError(
 				presale,
 				'TransferFailed'
 			);
@@ -475,22 +478,24 @@ describe('Presale Contract', function () {
 
 		it('should reject contributions of non whitelisted during whitelist period', async function () {
 			const contributionAmount = ethers.utils.parseEther('10'); // 10 ETH
+			const signature = await whitelist.generateWhitelistSignature(whitelistSigner, investor2);
+
 			await expect(
-				presale.connect(investor1).contribute({ value: contributionAmount })
+				presale.connect(investor1).contribute(signature, { value: contributionAmount })
 			).to.be.revertedWithCustomError(presale, 'NotWhitelisted');
 		});
 	});
 
 	describe('Whitelist contributions with Bonuses', function () {
 		it('should correctly calculate effective amount with bonus within first threshold', async function () {
-			await presale.connect(owner).whitelistAddresses([investor1.address]);
 
+			const signature = await whitelist.generateWhitelistSignature(whitelistSigner, investor1);
 			const contributionAmount = ethers.utils.parseEther('10'); // 10 ETH
 			const totalEthEffectiveBefore = await presale.totalEthEffective();
 
 			const expectedEffectiveAmount = calculate.effectiveAmount(contributionAmount, totalEthEffectiveBefore);
 
-			const tx = await presale.connect(investor1).contribute({ value: contributionAmount });
+			const tx = await presale.connect(investor1).contribute(signature, { value: contributionAmount });
 
 			const receipt = await tx.wait();
 
@@ -506,18 +511,19 @@ describe('Presale Contract', function () {
 		});
 
 		it('should correctly calculate effective amount when contribution spans multiple thresholds', async function () {
-			await presale.connect(owner).whitelistAddresses([investor1.address, investor2.address]);
+			const signature1 = await whitelist.generateWhitelistSignature(whitelistSigner, investor1);
+			const signature2 = await whitelist.generateWhitelistSignature(whitelistSigner, investor2);
 
 			// Initial contribution to set totalEthEffectiveBefore
 			const initialContributionAmount = ethers.utils.parseEther('10'); // 10 ETH
-			await presale.connect(investor1).contribute({ value: initialContributionAmount });
+			await presale.connect(investor1).contribute(signature1, { value: initialContributionAmount });
 
 			const totalEthEffectiveBefore = await presale.totalEthEffective();
 
 			const contributionAmount = ethers.utils.parseEther('40');
 			const expectedEffectiveAmount = calculate.effectiveAmount(contributionAmount, initialContributionAmount);
 
-			const tx = await presale.connect(investor2).contribute({ value: contributionAmount });
+			const tx = await presale.connect(investor2).contribute(signature2, { value: contributionAmount });
 
 			const receipt = await tx.wait();
 
@@ -534,19 +540,22 @@ describe('Presale Contract', function () {
 		});
 
 		it('should correctly handle contributions after all thresholds are crossed', async function () {
-			await presale.connect(owner).whitelistAddresses([investor1.address, investor2.address, investor3.address]);
+			const signature1 = await whitelist.generateWhitelistSignature(whitelistSigner, investor1);
+			const signature2 = await whitelist.generateWhitelistSignature(whitelistSigner, investor2);
+			const signature3 = await whitelist.generateWhitelistSignature(whitelistSigner, investor3);
+
 			// Contributions to cross all thresholds
 			const initialContributionAmount = ethers.utils.parseEther('35'); // 35 ETH
-			await presale.connect(investor1).contribute({ value: initialContributionAmount });
-			await presale.connect(investor2).contribute({ value: initialContributionAmount });
-			await presale.connect(investor3).contribute({ value: initialContributionAmount });
+			await presale.connect(investor1).contribute(signature1, { value: initialContributionAmount });
+			await presale.connect(investor2).contribute(signature2, { value: initialContributionAmount });
+			await presale.connect(investor3).contribute(signature3, { value: initialContributionAmount });
 
 			const totalEthEffectiveBefore = await presale.totalEthEffective();
 
 			const contributionAmount = BigNumber.from(ethers.utils.parseEther('105')); // 105 ETH
 			const expectedEffectiveAmount = calculate.effectiveAmount(contributionAmount, totalEthEffectiveBefore);
 
-			const tx = await presale.connect(investor2).contribute({ value: contributionAmount });
+			const tx = await presale.connect(investor2).contribute(signature2, { value: contributionAmount });
 
 			const receipt = await tx.wait();
 
@@ -563,13 +572,13 @@ describe('Presale Contract', function () {
 		});
 
 		it('should handle contributions exactly at threshold limits', async function () {
-			await presale.connect(owner).whitelistAddresses([investor1.address]);
+			const signature1 = await whitelist.generateWhitelistSignature(whitelistSigner, investor1);
 
 			// Contribute to reach exactly the first threshold
 			const contributionAmount = ethers.utils.parseEther('15'); // 15 ETH
 			const expectedEffectiveAmount = calculate.effectiveAmount(contributionAmount, ethers.BigNumber.from(0));
 
-			const tx = await presale.connect(investor1).contribute({ value: contributionAmount });
+			const tx = await presale.connect(investor1).contribute(signature1, { value: contributionAmount });
 
 			const receipt = await tx.wait();
 
@@ -581,14 +590,14 @@ describe('Presale Contract', function () {
 		});
 
 		it('should calculate no bonus after all thresholds are met', async function () {
-			await presale.connect(owner).whitelistAddresses([investor1.address]);
+			const signature1 = await whitelist.generateWhitelistSignature(whitelistSigner, investor1);
 
 			// Contribute to meet all thresholds
-			await presale.connect(investor1).contribute({ value: ethers.utils.parseEther('90') });
+			await presale.connect(investor1).contribute(signature1, { value: ethers.utils.parseEther('90') });
 
 			const contributionAmount = ethers.utils.parseEther('95'); // Above all thresholds
 
-			const tx = await presale.connect(investor1).contribute({ value: contributionAmount });
+			const tx = await presale.connect(investor1).contribute(signature1, { value: contributionAmount });
 
 			const receipt = await tx.wait();
 
@@ -606,9 +615,13 @@ describe('Presale Contract', function () {
 			const contributionAmount2 = ethers.utils.parseEther('20'); // 20 ETH
 			const contributionAmount3 = ethers.utils.parseEther('35'); // 20 ETH
 
-			await presale.connect(investor1).contribute({ value: contributionAmount1 });
-			await presale.connect(investor2).contribute({ value: contributionAmount2 });
-			await presale.connect(investor3).contribute({ value: contributionAmount3 });
+			const signature1 = await whitelist.generateWhitelistSignature(whitelistSigner, investor1);
+			const signature2 = await whitelist.generateWhitelistSignature(whitelistSigner, investor2);
+			const signature3 = await whitelist.generateWhitelistSignature(whitelistSigner, investor3);
+
+			await presale.connect(investor1).contribute(signature1, { value: contributionAmount1 });
+			await presale.connect(investor2).contribute(signature2, { value: contributionAmount2 });
+			await presale.connect(investor3).contribute(signature3, { value: contributionAmount3 });
 		});
 
 		it('should only allow claiming tokens after the claim start time', async function () {

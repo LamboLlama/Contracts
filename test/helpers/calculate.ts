@@ -5,9 +5,9 @@ export class Calculate {
         // Bonus thresholds and rates as defined in the contract
         const bonusRates = [40, 30, 15]; // in percentage (regular numbers)
         const bonusThresholds = [
-            BigNumber.from(ethers.utils.parseEther("15")),
-            BigNumber.from(ethers.utils.parseEther("45")),
-            BigNumber.from(ethers.utils.parseEther("90")),
+            BigNumber.from(ethers.utils.parseEther("5")),
+            BigNumber.from(ethers.utils.parseEther("10")),
+            BigNumber.from(ethers.utils.parseEther("20")),
         ];
 
         let remainingAmount = BigNumber.from(amount); // Amount to be distributed (BigNumber)

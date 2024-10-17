@@ -1,3 +1,7 @@
+
+
+// Sources flattened with hardhat v2.22.5 https://hardhat.org
+
 // SPDX-License-Identifier: LZBL-1.2 AND MIT
 
 // File @layerzerolabs/lz-evm-protocol-v2/contracts/interfaces/IMessageLibManager.sol@v2.3.40
@@ -42,17 +46,11 @@ interface IMessageLibManager {
 
     function setDefaultReceiveLibraryTimeout(uint32 _eid, address _lib, uint256 _expiry) external;
 
-    function defaultReceiveLibraryTimeout(
-        uint32 _eid
-    ) external view returns (address lib, uint256 expiry);
+    function defaultReceiveLibraryTimeout(uint32 _eid) external view returns (address lib, uint256 expiry);
 
     function isSupportedEid(uint32 _eid) external view returns (bool);
 
-    function isValidReceiveLibrary(
-        address _receiver,
-        uint32 _eid,
-        address _lib
-    ) external view returns (bool);
+    function isValidReceiveLibrary(address _receiver, uint32 _eid, address _lib) external view returns (bool);
 
     /// ------------------- OApp interfaces -------------------
     function setSendLibrary(address _oapp, uint32 _eid, address _newLib) external;
@@ -61,29 +59,13 @@ interface IMessageLibManager {
 
     function isDefaultSendLibrary(address _sender, uint32 _eid) external view returns (bool);
 
-    function setReceiveLibrary(
-        address _oapp,
-        uint32 _eid,
-        address _newLib,
-        uint256 _gracePeriod
-    ) external;
+    function setReceiveLibrary(address _oapp, uint32 _eid, address _newLib, uint256 _gracePeriod) external;
 
-    function getReceiveLibrary(
-        address _receiver,
-        uint32 _eid
-    ) external view returns (address lib, bool isDefault);
+    function getReceiveLibrary(address _receiver, uint32 _eid) external view returns (address lib, bool isDefault);
 
-    function setReceiveLibraryTimeout(
-        address _oapp,
-        uint32 _eid,
-        address _lib,
-        uint256 _expiry
-    ) external;
+    function setReceiveLibraryTimeout(address _oapp, uint32 _eid, address _lib, uint256 _expiry) external;
 
-    function receiveLibraryTimeout(
-        address _receiver,
-        uint32 _eid
-    ) external view returns (address lib, uint256 expiry);
+    function receiveLibraryTimeout(address _receiver, uint32 _eid) external view returns (address lib, uint256 expiry);
 
     function setConfig(address _oapp, address _lib, SetConfigParam[] calldata _params) external;
 
@@ -95,6 +77,7 @@ interface IMessageLibManager {
     ) external view returns (bytes memory config);
 }
 
+
 // File @layerzerolabs/lz-evm-protocol-v2/contracts/interfaces/IMessagingChannel.sol@v2.3.40
 
 // Original license: SPDX_License_Identifier: MIT
@@ -103,20 +86,8 @@ pragma solidity >=0.8.0;
 
 interface IMessagingChannel {
     event InboundNonceSkipped(uint32 srcEid, bytes32 sender, address receiver, uint64 nonce);
-    event PacketNilified(
-        uint32 srcEid,
-        bytes32 sender,
-        address receiver,
-        uint64 nonce,
-        bytes32 payloadHash
-    );
-    event PacketBurnt(
-        uint32 srcEid,
-        bytes32 sender,
-        address receiver,
-        uint64 nonce,
-        bytes32 payloadHash
-    );
+    event PacketNilified(uint32 srcEid, bytes32 sender, address receiver, uint64 nonce, bytes32 payloadHash);
+    event PacketBurnt(uint32 srcEid, bytes32 sender, address receiver, uint64 nonce, bytes32 payloadHash);
 
     function eid() external view returns (uint32);
 
@@ -124,39 +95,15 @@ interface IMessagingChannel {
     // required to provide _nextNonce to avoid race condition
     function skip(address _oapp, uint32 _srcEid, bytes32 _sender, uint64 _nonce) external;
 
-    function nilify(
-        address _oapp,
-        uint32 _srcEid,
-        bytes32 _sender,
-        uint64 _nonce,
-        bytes32 _payloadHash
-    ) external;
+    function nilify(address _oapp, uint32 _srcEid, bytes32 _sender, uint64 _nonce, bytes32 _payloadHash) external;
 
-    function burn(
-        address _oapp,
-        uint32 _srcEid,
-        bytes32 _sender,
-        uint64 _nonce,
-        bytes32 _payloadHash
-    ) external;
+    function burn(address _oapp, uint32 _srcEid, bytes32 _sender, uint64 _nonce, bytes32 _payloadHash) external;
 
-    function nextGuid(
-        address _sender,
-        uint32 _dstEid,
-        bytes32 _receiver
-    ) external view returns (bytes32);
+    function nextGuid(address _sender, uint32 _dstEid, bytes32 _receiver) external view returns (bytes32);
 
-    function inboundNonce(
-        address _receiver,
-        uint32 _srcEid,
-        bytes32 _sender
-    ) external view returns (uint64);
+    function inboundNonce(address _receiver, uint32 _srcEid, bytes32 _sender) external view returns (uint64);
 
-    function outboundNonce(
-        address _sender,
-        uint32 _dstEid,
-        bytes32 _receiver
-    ) external view returns (uint64);
+    function outboundNonce(address _sender, uint32 _dstEid, bytes32 _receiver) external view returns (uint64);
 
     function inboundPayloadHash(
         address _receiver,
@@ -165,12 +112,9 @@ interface IMessagingChannel {
         uint64 _nonce
     ) external view returns (bytes32);
 
-    function lazyInboundNonce(
-        address _receiver,
-        uint32 _srcEid,
-        bytes32 _sender
-    ) external view returns (uint64);
+    function lazyInboundNonce(address _receiver, uint32 _srcEid, bytes32 _sender) external view returns (uint64);
 }
+
 
 // File @layerzerolabs/lz-evm-protocol-v2/contracts/interfaces/IMessagingComposer.sol@v2.3.40
 
@@ -201,12 +145,7 @@ interface IMessagingComposer {
         uint16 _index
     ) external view returns (bytes32 messageHash);
 
-    function sendCompose(
-        address _to,
-        bytes32 _guid,
-        uint16 _index,
-        bytes calldata _message
-    ) external;
+    function sendCompose(address _to, bytes32 _guid, uint16 _index, bytes calldata _message) external;
 
     function lzCompose(
         address _from,
@@ -217,6 +156,7 @@ interface IMessagingComposer {
         bytes calldata _extraData
     ) external payable;
 }
+
 
 // File @layerzerolabs/lz-evm-protocol-v2/contracts/interfaces/IMessagingContext.sol@v2.3.40
 
@@ -230,11 +170,15 @@ interface IMessagingContext {
     function getSendContext() external view returns (uint32 dstEid, address sender);
 }
 
+
 // File @layerzerolabs/lz-evm-protocol-v2/contracts/interfaces/ILayerZeroEndpointV2.sol@v2.3.40
 
 // Original license: SPDX_License_Identifier: MIT
 
 pragma solidity >=0.8.0;
+
+
+
 
 struct MessagingParams {
     uint32 dstEid;
@@ -261,12 +205,7 @@ struct Origin {
     uint64 nonce;
 }
 
-interface ILayerZeroEndpointV2 is
-    IMessageLibManager,
-    IMessagingComposer,
-    IMessagingChannel,
-    IMessagingContext
-{
+interface ILayerZeroEndpointV2 is IMessageLibManager, IMessagingComposer, IMessagingChannel, IMessagingContext {
     event PacketSent(bytes encodedPayload, bytes options, address sendLibrary);
 
     event PacketVerified(Origin origin, address receiver, bytes32 payloadHash);
@@ -289,10 +228,7 @@ interface ILayerZeroEndpointV2 is
 
     event DelegateSet(address sender, address delegate);
 
-    function quote(
-        MessagingParams calldata _params,
-        address _sender
-    ) external view returns (MessagingFee memory);
+    function quote(MessagingParams calldata _params, address _sender) external view returns (MessagingFee memory);
 
     function send(
         MessagingParams calldata _params,
@@ -303,10 +239,7 @@ interface ILayerZeroEndpointV2 is
 
     function verifiable(Origin calldata _origin, address _receiver) external view returns (bool);
 
-    function initializable(
-        Origin calldata _origin,
-        address _receiver
-    ) external view returns (bool);
+    function initializable(Origin calldata _origin, address _receiver) external view returns (bool);
 
     function lzReceive(
         Origin calldata _origin,
@@ -317,12 +250,7 @@ interface ILayerZeroEndpointV2 is
     ) external payable;
 
     // oapp can burn messages partially by calling this function with its own business logic if messages are verified in order
-    function clear(
-        address _oapp,
-        Origin calldata _origin,
-        bytes32 _guid,
-        bytes calldata _message
-    ) external;
+    function clear(address _oapp, Origin calldata _origin, bytes32 _guid, bytes calldata _message) external;
 
     function setLzToken(address _lzToken) external;
 
@@ -332,6 +260,7 @@ interface ILayerZeroEndpointV2 is
 
     function setDelegate(address _delegate) external;
 }
+
 
 // File @layerzerolabs/lz-evm-oapp-v2/contracts/oapp/interfaces/IOAppCore.sol@v2.3.40
 
@@ -386,6 +315,7 @@ interface IOAppCore {
     function setDelegate(address _delegate) external;
 }
 
+
 // File @layerzerolabs/lz-evm-protocol-v2/contracts/interfaces/ILayerZeroReceiver.sol@v2.3.40
 
 // Original license: SPDX_License_Identifier: MIT
@@ -405,6 +335,7 @@ interface ILayerZeroReceiver {
         bytes calldata _extraData
     ) external payable;
 }
+
 
 // File @layerzerolabs/lz-evm-oapp-v2/contracts/oapp/interfaces/IOAppReceiver.sol@v2.3.40
 
@@ -431,6 +362,7 @@ interface IOAppReceiver is ILayerZeroReceiver {
         address _sender
     ) external view returns (bool isSender);
 }
+
 
 // File @layerzerolabs/lz-evm-oapp-v2/contracts/oapp/interfaces/IOAppOptionsType3.sol@v2.3.40
 
@@ -478,6 +410,7 @@ interface IOAppOptionsType3 {
     ) external view returns (bytes memory options);
 }
 
+
 // File @openzeppelin/contracts/utils/Context.sol@v4.9.2
 
 // Original license: SPDX_License_Identifier: MIT
@@ -504,6 +437,7 @@ abstract contract Context {
         return msg.data;
     }
 }
+
 
 // File @openzeppelin/contracts/access/Ownable.sol@v4.9.2
 
@@ -589,11 +523,13 @@ abstract contract Ownable is Context {
     }
 }
 
+
 // File @layerzerolabs/lz-evm-oapp-v2/contracts/oapp/libs/OAppOptionsType3.sol@v2.3.40
 
 // Original license: SPDX_License_Identifier: MIT
 
 pragma solidity ^0.8.20;
+
 
 /**
  * @title OAppOptionsType3
@@ -615,9 +551,7 @@ abstract contract OAppOptionsType3 is IOAppOptionsType3, Ownable {
      * eg. Amount of lzReceive() gas necessary to deliver a lzCompose() message adds overhead you dont want to pay
      * if you are only making a standard LayerZero message ie. lzReceive() WITHOUT sendCompose().
      */
-    function setEnforcedOptions(
-        EnforcedOptionParam[] calldata _enforcedOptions
-    ) public virtual onlyOwner {
+    function setEnforcedOptions(EnforcedOptionParam[] calldata _enforcedOptions) public virtual onlyOwner {
         _setEnforcedOptions(_enforcedOptions);
     }
 
@@ -634,9 +568,7 @@ abstract contract OAppOptionsType3 is IOAppOptionsType3, Ownable {
         for (uint256 i = 0; i < _enforcedOptions.length; i++) {
             // @dev Enforced options are only available for optionType 3, as type 1 and 2 dont support combining.
             _assertOptionsType3(_enforcedOptions[i].options);
-            enforcedOptions[_enforcedOptions[i].eid][
-                _enforcedOptions[i].msgType
-            ] = _enforcedOptions[i].options;
+            enforcedOptions[_enforcedOptions[i].eid][_enforcedOptions[i].msgType] = _enforcedOptions[i].options;
         }
 
         emit EnforcedOptionSet(_enforcedOptions);
@@ -691,11 +623,13 @@ abstract contract OAppOptionsType3 is IOAppOptionsType3, Ownable {
     }
 }
 
+
 // File @layerzerolabs/lz-evm-oapp-v2/contracts/oapp/OAppCore.sol@v2.3.40
 
 // Original license: SPDX_License_Identifier: MIT
 
 pragma solidity ^0.8.20;
+
 
 /**
  * @title OAppCore
@@ -774,11 +708,13 @@ abstract contract OAppCore is IOAppCore, Ownable {
     }
 }
 
+
 // File @layerzerolabs/lz-evm-oapp-v2/contracts/oapp/OAppReceiver.sol@v2.3.40
 
 // Original license: SPDX_License_Identifier: MIT
 
 pragma solidity ^0.8.20;
+
 
 /**
  * @title OAppReceiver
@@ -801,12 +737,7 @@ abstract contract OAppReceiver is IOAppReceiver, OAppCore {
      * ie. this is a RECEIVE only OApp.
      * @dev If the OApp uses both OAppSender and OAppReceiver, then this needs to be override returning the correct versions.
      */
-    function oAppVersion()
-        public
-        view
-        virtual
-        returns (uint64 senderVersion, uint64 receiverVersion)
-    {
+    function oAppVersion() public view virtual returns (uint64 senderVersion, uint64 receiverVersion) {
         return (0, RECEIVER_VERSION);
     }
 
@@ -855,10 +786,7 @@ abstract contract OAppReceiver is IOAppReceiver, OAppCore {
      * @dev This is also enforced by the OApp.
      * @dev By default this is NOT enabled. ie. nextNonce is hardcoded to return 0.
      */
-    function nextNonce(
-        uint32 /*_srcEid*/,
-        bytes32 /*_sender*/
-    ) public view virtual returns (uint64 nonce) {
+    function nextNonce(uint32 /*_srcEid*/, bytes32 /*_sender*/) public view virtual returns (uint64 nonce) {
         return 0;
     }
 
@@ -886,8 +814,7 @@ abstract contract OAppReceiver is IOAppReceiver, OAppCore {
         if (address(endpoint) != msg.sender) revert OnlyEndpoint(msg.sender);
 
         // Ensure that the sender matches the expected peer for the source endpoint.
-        if (_getPeerOrRevert(_origin.srcEid) != _origin.sender)
-            revert OnlyPeer(_origin.srcEid, _origin.sender);
+        if (_getPeerOrRevert(_origin.srcEid) != _origin.sender) revert OnlyPeer(_origin.srcEid, _origin.sender);
 
         // Call the internal OApp implementation of lzReceive.
         _lzReceive(_origin, _guid, _message, _executor, _extraData);
@@ -904,6 +831,7 @@ abstract contract OAppReceiver is IOAppReceiver, OAppCore {
         bytes calldata _extraData
     ) internal virtual;
 }
+
 
 // File @openzeppelin/contracts/token/ERC20/extensions/IERC20Permit.sol@v4.9.2
 
@@ -967,6 +895,7 @@ interface IERC20Permit {
     // solhint-disable-next-line func-name-mixedcase
     function DOMAIN_SEPARATOR() external view returns (bytes32);
 }
+
 
 // File @openzeppelin/contracts/token/ERC20/IERC20.sol@v4.9.2
 
@@ -1048,6 +977,7 @@ interface IERC20 {
      */
     function transferFrom(address from, address to, uint256 amount) external returns (bool);
 }
+
 
 // File @openzeppelin/contracts/utils/Address.sol@v4.9.2
 
@@ -1168,18 +1098,8 @@ library Address {
      *
      * _Available since v3.1._
      */
-    function functionCallWithValue(
-        address target,
-        bytes memory data,
-        uint256 value
-    ) internal returns (bytes memory) {
-        return
-            functionCallWithValue(
-                target,
-                data,
-                value,
-                "Address: low-level call with value failed"
-            );
+    function functionCallWithValue(address target, bytes memory data, uint256 value) internal returns (bytes memory) {
+        return functionCallWithValue(target, data, value, "Address: low-level call with value failed");
     }
 
     /**
@@ -1205,10 +1125,7 @@ library Address {
      *
      * _Available since v3.3._
      */
-    function functionStaticCall(
-        address target,
-        bytes memory data
-    ) internal view returns (bytes memory) {
+    function functionStaticCall(address target, bytes memory data) internal view returns (bytes memory) {
         return functionStaticCall(target, data, "Address: low-level static call failed");
     }
 
@@ -1233,10 +1150,7 @@ library Address {
      *
      * _Available since v3.4._
      */
-    function functionDelegateCall(
-        address target,
-        bytes memory data
-    ) internal returns (bytes memory) {
+    function functionDelegateCall(address target, bytes memory data) internal returns (bytes memory) {
         return functionDelegateCall(target, data, "Address: low-level delegate call failed");
     }
 
@@ -1312,12 +1226,15 @@ library Address {
     }
 }
 
+
 // File @openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol@v4.9.2
 
 // Original license: SPDX_License_Identifier: MIT
 // OpenZeppelin Contracts (last updated v4.9.0) (token/ERC20/utils/SafeERC20.sol)
 
 pragma solidity ^0.8.0;
+
+
 
 /**
  * @title SafeERC20
@@ -1344,10 +1261,7 @@ library SafeERC20 {
      * calling contract. If `token` returns no value, non-reverting calls are assumed to be successful.
      */
     function safeTransferFrom(IERC20 token, address from, address to, uint256 value) internal {
-        _callOptionalReturn(
-            token,
-            abi.encodeWithSelector(token.transferFrom.selector, from, to, value)
-        );
+        _callOptionalReturn(token, abi.encodeWithSelector(token.transferFrom.selector, from, to, value));
     }
 
     /**
@@ -1374,10 +1288,7 @@ library SafeERC20 {
      */
     function safeIncreaseAllowance(IERC20 token, address spender, uint256 value) internal {
         uint256 oldAllowance = token.allowance(address(this), spender);
-        _callOptionalReturn(
-            token,
-            abi.encodeWithSelector(token.approve.selector, spender, oldAllowance + value)
-        );
+        _callOptionalReturn(token, abi.encodeWithSelector(token.approve.selector, spender, oldAllowance + value));
     }
 
     /**
@@ -1388,10 +1299,7 @@ library SafeERC20 {
         unchecked {
             uint256 oldAllowance = token.allowance(address(this), spender);
             require(oldAllowance >= value, "SafeERC20: decreased allowance below zero");
-            _callOptionalReturn(
-                token,
-                abi.encodeWithSelector(token.approve.selector, spender, oldAllowance - value)
-            );
+            _callOptionalReturn(token, abi.encodeWithSelector(token.approve.selector, spender, oldAllowance - value));
         }
     }
 
@@ -1440,14 +1348,8 @@ library SafeERC20 {
         // we're implementing it ourselves. We use {Address-functionCall} to perform this call, which verifies that
         // the target address contains contract code and also asserts for success in the low-level call.
 
-        bytes memory returndata = address(token).functionCall(
-            data,
-            "SafeERC20: low-level call failed"
-        );
-        require(
-            returndata.length == 0 || abi.decode(returndata, (bool)),
-            "SafeERC20: ERC20 operation did not succeed"
-        );
+        bytes memory returndata = address(token).functionCall(data, "SafeERC20: low-level call failed");
+        require(returndata.length == 0 || abi.decode(returndata, (bool)), "SafeERC20: ERC20 operation did not succeed");
     }
 
     /**
@@ -1465,17 +1367,18 @@ library SafeERC20 {
 
         (bool success, bytes memory returndata) = address(token).call(data);
         return
-            success &&
-            (returndata.length == 0 || abi.decode(returndata, (bool))) &&
-            Address.isContract(address(token));
+            success && (returndata.length == 0 || abi.decode(returndata, (bool))) && Address.isContract(address(token));
     }
 }
+
 
 // File @layerzerolabs/lz-evm-oapp-v2/contracts/oapp/OAppSender.sol@v2.3.40
 
 // Original license: SPDX_License_Identifier: MIT
 
 pragma solidity ^0.8.20;
+
+
 
 /**
  * @title OAppSender
@@ -1501,12 +1404,7 @@ abstract contract OAppSender is OAppCore {
      * ie. this is a SEND only OApp.
      * @dev If the OApp uses both OAppSender and OAppReceiver, then this needs to be override returning the correct versions
      */
-    function oAppVersion()
-        public
-        view
-        virtual
-        returns (uint64 senderVersion, uint64 receiverVersion)
-    {
+    function oAppVersion() public view virtual returns (uint64 senderVersion, uint64 receiverVersion) {
         return (SENDER_VERSION, 0);
     }
 
@@ -1528,13 +1426,7 @@ abstract contract OAppSender is OAppCore {
     ) internal view virtual returns (MessagingFee memory fee) {
         return
             endpoint.quote(
-                MessagingParams(
-                    _dstEid,
-                    _getPeerOrRevert(_dstEid),
-                    _message,
-                    _options,
-                    _payInLzToken
-                ),
+                MessagingParams(_dstEid, _getPeerOrRevert(_dstEid), _message, _options, _payInLzToken),
                 address(this)
             );
     }
@@ -1566,14 +1458,8 @@ abstract contract OAppSender is OAppCore {
 
         return
             // solhint-disable-next-line check-send-result
-            endpoint.send{value: messageValue}(
-                MessagingParams(
-                    _dstEid,
-                    _getPeerOrRevert(_dstEid),
-                    _message,
-                    _options,
-                    _fee.lzTokenFee > 0
-                ),
+            endpoint.send{ value: messageValue }(
+                MessagingParams(_dstEid, _getPeerOrRevert(_dstEid), _message, _options, _fee.lzTokenFee > 0),
                 _refundAddress
             );
     }
@@ -1611,6 +1497,7 @@ abstract contract OAppSender is OAppCore {
     }
 }
 
+
 // File @layerzerolabs/lz-evm-oapp-v2/contracts/oapp/OApp.sol@v2.3.40
 
 // Original license: SPDX_License_Identifier: MIT
@@ -1622,6 +1509,7 @@ pragma solidity ^0.8.20;
 
 // @dev Import the 'Origin' so it's exposed to OApp implementers
 // solhint-disable-next-line no-unused-import
+
 
 /**
  * @title OApp
@@ -1650,6 +1538,7 @@ abstract contract OApp is OAppSender, OAppReceiver {
         return (SENDER_VERSION, RECEIVER_VERSION);
     }
 }
+
 
 // File @layerzerolabs/lz-evm-oapp-v2/contracts/oft/interfaces/IOFT.sol@v2.3.40
 
@@ -1765,10 +1654,7 @@ interface IOFT {
      */
     function quoteOFT(
         SendParam calldata _sendParam
-    )
-        external
-        view
-        returns (OFTLimit memory, OFTFeeDetail[] memory oftFeeDetails, OFTReceipt memory);
+    ) external view returns (OFTLimit memory, OFTFeeDetail[] memory oftFeeDetails, OFTReceipt memory);
 
     /**
      * @notice Provides a quote for the send() operation.
@@ -1780,10 +1666,7 @@ interface IOFT {
      *  - nativeFee: The native fee.
      *  - lzTokenFee: The lzToken fee.
      */
-    function quoteSend(
-        SendParam calldata _sendParam,
-        bool _payInLzToken
-    ) external view returns (MessagingFee memory);
+    function quoteSend(SendParam calldata _sendParam, bool _payInLzToken) external view returns (MessagingFee memory);
 
     /**
      * @notice Executes the send() operation.
@@ -1807,6 +1690,7 @@ interface IOFT {
     ) external payable returns (MessagingReceipt memory, OFTReceipt memory);
 }
 
+
 // File @layerzerolabs/lz-evm-oapp-v2/contracts/oapp/interfaces/IOAppMsgInspector.sol@v2.3.40
 
 // Original license: SPDX_License_Identifier: MIT
@@ -1829,11 +1713,9 @@ interface IOAppMsgInspector {
      *
      * @dev Optionally done as a revert, OR use the boolean provided to handle the failure.
      */
-    function inspect(
-        bytes calldata _message,
-        bytes calldata _options
-    ) external view returns (bool valid);
+    function inspect(bytes calldata _message, bytes calldata _options) external view returns (bool valid);
 }
+
 
 // File @layerzerolabs/lz-evm-oapp-v2/contracts/oft/libs/OFTComposeMsgCodec.sol@v2.3.40
 
@@ -1929,6 +1811,7 @@ library OFTComposeMsgCodec {
     }
 }
 
+
 // File @layerzerolabs/lz-evm-oapp-v2/contracts/oft/libs/OFTMsgCodec.sol@v2.3.40
 
 // Original license: SPDX_License_Identifier: MIT
@@ -2015,6 +1898,7 @@ library OFTMsgCodec {
     }
 }
 
+
 // File @openzeppelin/contracts/utils/introspection/IERC165.sol@v4.9.2
 
 // Original license: SPDX_License_Identifier: MIT
@@ -2043,6 +1927,7 @@ interface IERC165 {
     function supportsInterface(bytes4 interfaceId) external view returns (bool);
 }
 
+
 // File @layerzerolabs/lz-evm-protocol-v2/contracts/interfaces/IMessageLib.sol@v2.3.40
 
 // Original license: SPDX_License_Identifier: MIT
@@ -2058,11 +1943,7 @@ enum MessageLibType {
 interface IMessageLib is IERC165 {
     function setConfig(address _oapp, SetConfigParam[] calldata _config) external;
 
-    function getConfig(
-        uint32 _eid,
-        address _oapp,
-        uint32 _configType
-    ) external view returns (bytes memory config);
+    function getConfig(uint32 _eid, address _oapp, uint32 _configType) external view returns (bytes memory config);
 
     function isSupportedEid(uint32 _eid) external view returns (bool);
 
@@ -2072,11 +1953,13 @@ interface IMessageLib is IERC165 {
     function messageLibType() external view returns (MessageLibType);
 }
 
+
 // File @layerzerolabs/lz-evm-protocol-v2/contracts/interfaces/ISendLib.sol@v2.3.40
 
 // Original license: SPDX_License_Identifier: MIT
 
 pragma solidity >=0.8.0;
+
 
 struct Packet {
     uint64 nonce;
@@ -2108,6 +1991,7 @@ interface ISendLib is IMessageLib {
     function withdrawLzTokenFee(address _lzToken, address _to, uint256 _amount) external;
 }
 
+
 // File @layerzerolabs/lz-evm-protocol-v2/contracts/libs/AddressCast.sol@v2.3.40
 
 // Original license: SPDX_License_Identifier: LZBL-1.2
@@ -2131,10 +2015,7 @@ library AddressCast {
         result = bytes32(uint256(uint160(_address)));
     }
 
-    function toBytes(
-        bytes32 _addressBytes32,
-        uint256 _size
-    ) internal pure returns (bytes memory result) {
+    function toBytes(bytes32 _addressBytes32, uint256 _size) internal pure returns (bytes memory result) {
         if (_size == 0 || _size > 32) revert AddressCast_InvalidSizeForAddress();
         result = new bytes(_size);
         unchecked {
@@ -2155,11 +2036,13 @@ library AddressCast {
     }
 }
 
+
 // File @layerzerolabs/lz-evm-protocol-v2/contracts/messagelib/libs/PacketV1Codec.sol@v2.3.40
 
 // Original license: SPDX_License_Identifier: LZBL-1.2
 
 pragma solidity ^0.8.20;
+
 
 library PacketV1Codec {
     using AddressCast for address;
@@ -2263,11 +2146,13 @@ library PacketV1Codec {
     }
 }
 
+
 // File @layerzerolabs/lz-evm-oapp-v2/contracts/precrime/libs/Packet.sol@v2.3.40
 
 // Original license: SPDX_License_Identifier: MIT
 
 pragma solidity ^0.8.20;
+
 
 /**
  * @title InboundPacket
@@ -2323,6 +2208,7 @@ library PacketDecoder {
         }
     }
 }
+
 
 // File @layerzerolabs/lz-evm-oapp-v2/contracts/precrime/interfaces/IOAppPreCrimeSimulator.sol@v2.3.40
 
@@ -2381,6 +2267,7 @@ interface IOAppPreCrimeSimulator {
     function isPeer(uint32 _eid, bytes32 _peer) external view returns (bool);
 }
 
+
 // File @layerzerolabs/lz-evm-oapp-v2/contracts/precrime/interfaces/IPreCrime.sol@v2.3.40
 
 // Original license: SPDX_License_Identifier: MIT
@@ -2406,10 +2293,7 @@ interface IPreCrime {
     error InvalidSimulationResult(uint32 eid, bytes reason);
     error CrimeFound(bytes crime);
 
-    function getConfig(
-        bytes[] calldata _packets,
-        uint256[] calldata _packetMsgValues
-    ) external returns (bytes memory);
+    function getConfig(bytes[] calldata _packets, uint256[] calldata _packetMsgValues) external returns (bytes memory);
 
     function simulate(
         bytes[] calldata _packets,
@@ -2427,11 +2311,14 @@ interface IPreCrime {
     function version() external view returns (uint64 major, uint8 minor);
 }
 
+
 // File @layerzerolabs/lz-evm-oapp-v2/contracts/precrime/OAppPreCrimeSimulator.sol@v2.3.40
 
 // Original license: SPDX_License_Identifier: MIT
 
 pragma solidity ^0.8.20;
+
+
 
 /**
  * @title OAppPreCrimeSimulator
@@ -2483,7 +2370,7 @@ abstract contract OAppPreCrimeSimulator is IOAppPreCrimeSimulator, Ownable {
             // They are instead stubbed to default values, address(0) and bytes("")
             // @dev Calling this.lzReceiveSimulate removes ability for assembly return 0 callstack exit,
             // which would cause the revert to be ignored.
-            this.lzReceiveSimulate{value: packet.value}(
+            this.lzReceiveSimulate{ value: packet.value }(
                 packet.origin,
                 packet.guid,
                 packet.message,
@@ -2551,11 +2438,16 @@ abstract contract OAppPreCrimeSimulator is IOAppPreCrimeSimulator, Ownable {
     function isPeer(uint32 _eid, bytes32 _peer) public view virtual returns (bool);
 }
 
+
 // File @layerzerolabs/lz-evm-oapp-v2/contracts/oft/OFTCore.sol@v2.3.40
 
 // Original license: SPDX_License_Identifier: MIT
 
 pragma solidity ^0.8.20;
+
+
+
+
 
 /**
  * @title OFTCore
@@ -2596,11 +2488,7 @@ abstract contract OFTCore is IOFT, OApp, OAppPreCrimeSimulator, OAppOptionsType3
      * @param _endpoint The address of the LayerZero endpoint.
      * @param _delegate The delegate capable of making OApp configurations inside of the endpoint.
      */
-    constructor(
-        uint8 _localDecimals,
-        address _endpoint,
-        address _delegate
-    ) OApp(_endpoint, _delegate) {
+    constructor(uint8 _localDecimals, address _endpoint, address _delegate) OApp(_endpoint, _delegate) {
         if (_localDecimals < sharedDecimals()) revert InvalidLocalDecimals();
         decimalConversionRate = 10 ** (_localDecimals - sharedDecimals());
     }
@@ -2658,11 +2546,7 @@ abstract contract OFTCore is IOFT, OApp, OAppPreCrimeSimulator, OAppOptionsType3
         external
         view
         virtual
-        returns (
-            OFTLimit memory oftLimit,
-            OFTFeeDetail[] memory oftFeeDetails,
-            OFTReceipt memory oftReceipt
-        )
+        returns (OFTLimit memory oftLimit, OFTFeeDetail[] memory oftFeeDetails, OFTReceipt memory oftReceipt)
     {
         uint256 minAmountLD = 0; // Unused in the default implementation.
         uint256 maxAmountLD = type(uint64).max; // Unused in the default implementation.
@@ -2699,17 +2583,10 @@ abstract contract OFTCore is IOFT, OApp, OAppPreCrimeSimulator, OAppOptionsType3
     ) external view virtual returns (MessagingFee memory msgFee) {
         // @dev mock the amount to receive, this is the same operation used in the send().
         // The quote is as similar as possible to the actual send() operation.
-        (, uint256 amountReceivedLD) = _debitView(
-            _sendParam.amountLD,
-            _sendParam.minAmountLD,
-            _sendParam.dstEid
-        );
+        (, uint256 amountReceivedLD) = _debitView(_sendParam.amountLD, _sendParam.minAmountLD, _sendParam.dstEid);
 
         // @dev Builds the options and OFT message to quote in the endpoint.
-        (bytes memory message, bytes memory options) = _buildMsgAndOptions(
-            _sendParam,
-            amountReceivedLD
-        );
+        (bytes memory message, bytes memory options) = _buildMsgAndOptions(_sendParam, amountReceivedLD);
 
         // @dev Calculates the LayerZero fee for the send() operation.
         return _quote(_sendParam.dstEid, message, options, _payInLzToken);
@@ -2734,12 +2611,7 @@ abstract contract OFTCore is IOFT, OApp, OAppPreCrimeSimulator, OAppOptionsType3
         SendParam calldata _sendParam,
         MessagingFee calldata _fee,
         address _refundAddress
-    )
-        external
-        payable
-        virtual
-        returns (MessagingReceipt memory msgReceipt, OFTReceipt memory oftReceipt)
-    {
+    ) external payable virtual returns (MessagingReceipt memory msgReceipt, OFTReceipt memory oftReceipt) {
         // @dev Applies the token transfers regarding this send() operation.
         // - amountSentLD is the amount in local decimals that was ACTUALLY sent/debited from the sender.
         // - amountReceivedLD is the amount in local decimals that will be received/credited to the recipient on the remote OFT instance.
@@ -2751,23 +2623,14 @@ abstract contract OFTCore is IOFT, OApp, OAppPreCrimeSimulator, OAppOptionsType3
         );
 
         // @dev Builds the options and OFT message to quote in the endpoint.
-        (bytes memory message, bytes memory options) = _buildMsgAndOptions(
-            _sendParam,
-            amountReceivedLD
-        );
+        (bytes memory message, bytes memory options) = _buildMsgAndOptions(_sendParam, amountReceivedLD);
 
         // @dev Sends the message to the LayerZero endpoint and returns the LayerZero msg receipt.
         msgReceipt = _lzSend(_sendParam.dstEid, message, options, _fee, _refundAddress);
         // @dev Formulate the OFT receipt.
         oftReceipt = OFTReceipt(amountSentLD, amountReceivedLD);
 
-        emit OFTSent(
-            msgReceipt.guid,
-            _sendParam.dstEid,
-            msg.sender,
-            amountSentLD,
-            amountReceivedLD
-        );
+        emit OFTSent(msgReceipt.guid, _sendParam.dstEid, msg.sender, amountSentLD, amountReceivedLD);
     }
 
     /**
@@ -2838,12 +2701,7 @@ abstract contract OFTCore is IOFT, OApp, OAppPreCrimeSimulator, OAppOptionsType3
             // @dev The off-chain executor will listen and process the msg based on the src-chain-callers compose options passed.
             // @dev The index is used when a OApp needs to compose multiple msgs on lzReceive.
             // For default OFT implementation there is only 1 compose msg per lzReceive, thus its always 0.
-            endpoint.sendCompose(
-                toAddress,
-                _guid,
-                0 /* the index of the composed message*/,
-                composeMsg
-            );
+            endpoint.sendCompose(toAddress, _guid, 0 /* the index of the composed message*/, composeMsg);
         }
 
         emit OFTReceived(_guid, _origin.srcEid, toAddress, amountReceivedLD);
@@ -2977,6 +2835,7 @@ abstract contract OFTCore is IOFT, OApp, OAppPreCrimeSimulator, OAppOptionsType3
     ) internal virtual returns (uint256 amountReceivedLD);
 }
 
+
 // File @openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol@v4.9.2
 
 // Original license: SPDX_License_Identifier: MIT
@@ -3006,12 +2865,15 @@ interface IERC20Metadata is IERC20 {
     function decimals() external view returns (uint8);
 }
 
+
 // File @openzeppelin/contracts/token/ERC20/ERC20.sol@v4.9.2
 
 // Original license: SPDX_License_Identifier: MIT
 // OpenZeppelin Contracts (last updated v4.9.0) (token/ERC20/ERC20.sol)
 
 pragma solidity ^0.8.0;
+
+
 
 /**
  * @dev Implementation of the {IERC20} interface.
@@ -3125,10 +2987,7 @@ contract ERC20 is Context, IERC20, IERC20Metadata {
     /**
      * @dev See {IERC20-allowance}.
      */
-    function allowance(
-        address owner,
-        address spender
-    ) public view virtual override returns (uint256) {
+    function allowance(address owner, address spender) public view virtual override returns (uint256) {
         return _allowances[owner][spender];
     }
 
@@ -3164,11 +3023,7 @@ contract ERC20 is Context, IERC20, IERC20Metadata {
      * - the caller must have allowance for ``from``'s tokens of at least
      * `amount`.
      */
-    function transferFrom(
-        address from,
-        address to,
-        uint256 amount
-    ) public virtual override returns (bool) {
+    function transferFrom(address from, address to, uint256 amount) public virtual override returns (bool) {
         address spender = _msgSender();
         _spendAllowance(from, spender, amount);
         _transfer(from, to, amount);
@@ -3207,10 +3062,7 @@ contract ERC20 is Context, IERC20, IERC20Metadata {
      * - `spender` must have allowance for the caller of at least
      * `subtractedValue`.
      */
-    function decreaseAllowance(
-        address spender,
-        uint256 subtractedValue
-    ) public virtual returns (bool) {
+    function decreaseAllowance(address spender, uint256 subtractedValue) public virtual returns (bool) {
         address owner = _msgSender();
         uint256 currentAllowance = allowance(owner, spender);
         require(currentAllowance >= subtractedValue, "ERC20: decreased allowance below zero");
@@ -3380,11 +3232,13 @@ contract ERC20 is Context, IERC20, IERC20Metadata {
     function _afterTokenTransfer(address from, address to, uint256 amount) internal virtual {}
 }
 
+
 // File @layerzerolabs/lz-evm-oapp-v2/contracts/oft/OFT.sol@v2.3.40
 
 // Original license: SPDX_License_Identifier: MIT
 
 pragma solidity ^0.8.20;
+
 
 /**
  * @title OFT Contract
@@ -3469,6 +3323,7 @@ abstract contract OFT is OFTCore, ERC20 {
     }
 }
 
+
 // File @openzeppelin/contracts/utils/Counters.sol@v4.9.2
 
 // Original license: SPDX_License_Identifier: MIT
@@ -3514,6 +3369,7 @@ library Counters {
         counter._value = 0;
     }
 }
+
 
 // File @openzeppelin/contracts/utils/math/Math.sol@v4.9.2
 
@@ -3571,11 +3427,7 @@ library Math {
      * @dev Original credit to Remco Bloemen under MIT license (https://xn--2-umb.com/21/muldiv)
      * with further edits by Uniswap Labs also under MIT license.
      */
-    function mulDiv(
-        uint256 x,
-        uint256 y,
-        uint256 denominator
-    ) internal pure returns (uint256 result) {
+    function mulDiv(uint256 x, uint256 y, uint256 denominator) internal pure returns (uint256 result) {
         unchecked {
             // 512-bit multiply [prod1 prod0] = x * y. Compute the product mod 2^256 and mod 2^256 - 1, then use
             // use the Chinese Remainder Theorem to reconstruct the 512 bit result. The result is stored in two 256
@@ -3659,12 +3511,7 @@ library Math {
     /**
      * @notice Calculates x * y / denominator with full precision, following the selected rounding direction.
      */
-    function mulDiv(
-        uint256 x,
-        uint256 y,
-        uint256 denominator,
-        Rounding rounding
-    ) internal pure returns (uint256) {
+    function mulDiv(uint256 x, uint256 y, uint256 denominator, Rounding rounding) internal pure returns (uint256) {
         uint256 result = mulDiv(x, y, denominator);
         if (rounding == Rounding.Up && mulmod(x, y, denominator) > 0) {
             result += 1;
@@ -3866,6 +3713,7 @@ library Math {
     }
 }
 
+
 // File @openzeppelin/contracts/utils/math/SignedMath.sol@v4.9.2
 
 // Original license: SPDX_License_Identifier: MIT
@@ -3912,12 +3760,14 @@ library SignedMath {
     }
 }
 
+
 // File @openzeppelin/contracts/utils/Strings.sol@v4.9.2
 
 // Original license: SPDX_License_Identifier: MIT
 // OpenZeppelin Contracts (last updated v4.9.0) (utils/Strings.sol)
 
 pragma solidity ^0.8.0;
+
 
 /**
  * @dev String operations.
@@ -3997,6 +3847,7 @@ library Strings {
     }
 }
 
+
 // File @openzeppelin/contracts/utils/cryptography/ECDSA.sol@v4.9.2
 
 // Original license: SPDX_License_Identifier: MIT
@@ -4051,10 +3902,7 @@ library ECDSA {
      *
      * _Available since v4.3._
      */
-    function tryRecover(
-        bytes32 hash,
-        bytes memory signature
-    ) internal pure returns (address, RecoverError) {
+    function tryRecover(bytes32 hash, bytes memory signature) internal pure returns (address, RecoverError) {
         if (signature.length == 65) {
             bytes32 r;
             bytes32 s;
@@ -4100,13 +3948,8 @@ library ECDSA {
      *
      * _Available since v4.3._
      */
-    function tryRecover(
-        bytes32 hash,
-        bytes32 r,
-        bytes32 vs
-    ) internal pure returns (address, RecoverError) {
-        bytes32 s = vs &
-            bytes32(0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+    function tryRecover(bytes32 hash, bytes32 r, bytes32 vs) internal pure returns (address, RecoverError) {
+        bytes32 s = vs & bytes32(0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
         uint8 v = uint8((uint256(vs) >> 255) + 27);
         return tryRecover(hash, v, r, s);
     }
@@ -4128,12 +3971,7 @@ library ECDSA {
      *
      * _Available since v4.3._
      */
-    function tryRecover(
-        bytes32 hash,
-        uint8 v,
-        bytes32 r,
-        bytes32 s
-    ) internal pure returns (address, RecoverError) {
+    function tryRecover(bytes32 hash, uint8 v, bytes32 r, bytes32 s) internal pure returns (address, RecoverError) {
         // EIP-2 still allows signature malleability for ecrecover(). Remove this possibility and make the signature
         // unique. Appendix F in the Ethereum Yellow paper (https://ethereum.github.io/yellowpaper/paper.pdf), defines
         // the valid range for s in (301): 0 < s < secp256k1n ÷ 2 + 1, and for v in (302): v ∈ {27, 28}. Most
@@ -4194,10 +4032,7 @@ library ECDSA {
      * See {recover}.
      */
     function toEthSignedMessageHash(bytes memory s) internal pure returns (bytes32) {
-        return
-            keccak256(
-                abi.encodePacked("\x19Ethereum Signed Message:\n", Strings.toString(s.length), s)
-            );
+        return keccak256(abi.encodePacked("\x19Ethereum Signed Message:\n", Strings.toString(s.length), s));
     }
 
     /**
@@ -4209,10 +4044,7 @@ library ECDSA {
      *
      * See {recover}.
      */
-    function toTypedDataHash(
-        bytes32 domainSeparator,
-        bytes32 structHash
-    ) internal pure returns (bytes32 data) {
+    function toTypedDataHash(bytes32 domainSeparator, bytes32 structHash) internal pure returns (bytes32 data) {
         /// @solidity memory-safe-assembly
         assembly {
             let ptr := mload(0x40)
@@ -4229,13 +4061,11 @@ library ECDSA {
      *
      * See {recover}.
      */
-    function toDataWithIntendedValidatorHash(
-        address validator,
-        bytes memory data
-    ) internal pure returns (bytes32) {
+    function toDataWithIntendedValidatorHash(address validator, bytes memory data) internal pure returns (bytes32) {
         return keccak256(abi.encodePacked("\x19\x00", validator, data));
     }
 }
+
 
 // File @openzeppelin/contracts/interfaces/IERC5267.sol@v4.9.2
 
@@ -4267,6 +4097,7 @@ interface IERC5267 {
             uint256[] memory extensions
         );
 }
+
 
 // File @openzeppelin/contracts/utils/StorageSlot.sol@v4.9.2
 
@@ -4409,6 +4240,7 @@ library StorageSlot {
     }
 }
 
+
 // File @openzeppelin/contracts/utils/ShortStrings.sol@v4.9.2
 
 // Original license: SPDX_License_Identifier: MIT
@@ -4450,8 +4282,7 @@ type ShortString is bytes32;
  */
 library ShortStrings {
     // Used as an identifier for strings longer than 31 bytes.
-    bytes32 private constant _FALLBACK_SENTINEL =
-        0x00000000000000000000000000000000000000000000000000000000000000FF;
+    bytes32 private constant _FALLBACK_SENTINEL = 0x00000000000000000000000000000000000000000000000000000000000000FF;
 
     error StringTooLong(string str);
     error InvalidShortString();
@@ -4498,10 +4329,7 @@ library ShortStrings {
     /**
      * @dev Encode a string into a `ShortString`, or write it to storage if it is too long.
      */
-    function toShortStringWithFallback(
-        string memory value,
-        string storage store
-    ) internal returns (ShortString) {
+    function toShortStringWithFallback(string memory value, string storage store) internal returns (ShortString) {
         if (bytes(value).length < 32) {
             return toShortString(value);
         } else {
@@ -4513,10 +4341,7 @@ library ShortStrings {
     /**
      * @dev Decode a string that was encoded to `ShortString` or written to storage using {setWithFallback}.
      */
-    function toStringWithFallback(
-        ShortString value,
-        string storage store
-    ) internal pure returns (string memory) {
+    function toStringWithFallback(ShortString value, string storage store) internal pure returns (string memory) {
         if (ShortString.unwrap(value) != _FALLBACK_SENTINEL) {
             return toString(value);
         } else {
@@ -4530,10 +4355,7 @@ library ShortStrings {
      * WARNING: This will return the "byte length" of the string. This may not reflect the actual length in terms of
      * actual characters as the UTF-8 encoding of a single character can span over multiple bytes.
      */
-    function byteLengthWithFallback(
-        ShortString value,
-        string storage store
-    ) internal view returns (uint256) {
+    function byteLengthWithFallback(ShortString value, string storage store) internal view returns (uint256) {
         if (ShortString.unwrap(value) != _FALLBACK_SENTINEL) {
             return byteLength(value);
         } else {
@@ -4542,12 +4364,15 @@ library ShortStrings {
     }
 }
 
+
 // File @openzeppelin/contracts/utils/cryptography/EIP712.sol@v4.9.2
 
 // Original license: SPDX_License_Identifier: MIT
 // OpenZeppelin Contracts (last updated v4.9.0) (utils/cryptography/EIP712.sol)
 
 pragma solidity ^0.8.8;
+
+
 
 /**
  * @dev https://eips.ethereum.org/EIPS/eip-712[EIP 712] is a standard for hashing and signing of typed structured data.
@@ -4578,9 +4403,7 @@ abstract contract EIP712 is IERC5267 {
     using ShortStrings for *;
 
     bytes32 private constant _TYPE_HASH =
-        keccak256(
-            "EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"
-        );
+        keccak256("EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)");
 
     // Cache the domain separator as an immutable value, but also store the chain id that it corresponds to, in order to
     // invalidate the cached domain separator if the chain id changes.
@@ -4631,10 +4454,7 @@ abstract contract EIP712 is IERC5267 {
     }
 
     function _buildDomainSeparator() private view returns (bytes32) {
-        return
-            keccak256(
-                abi.encode(_TYPE_HASH, _hashedName, _hashedVersion, block.chainid, address(this))
-            );
+        return keccak256(abi.encode(_TYPE_HASH, _hashedName, _hashedVersion, block.chainid, address(this)));
     }
 
     /**
@@ -4688,12 +4508,17 @@ abstract contract EIP712 is IERC5267 {
     }
 }
 
+
 // File @openzeppelin/contracts/token/ERC20/extensions/ERC20Permit.sol@v4.9.2
 
 // Original license: SPDX_License_Identifier: MIT
 // OpenZeppelin Contracts (last updated v4.9.0) (token/ERC20/extensions/ERC20Permit.sol)
 
 pragma solidity ^0.8.0;
+
+
+
+
 
 /**
  * @dev Implementation of the ERC20 Permit extension allowing approvals to be made via signatures, as defined in
@@ -4712,9 +4537,7 @@ abstract contract ERC20Permit is ERC20, IERC20Permit, EIP712 {
 
     // solhint-disable-next-line var-name-mixedcase
     bytes32 private constant _PERMIT_TYPEHASH =
-        keccak256(
-            "Permit(address owner,address spender,uint256 value,uint256 nonce,uint256 deadline)"
-        );
+        keccak256("Permit(address owner,address spender,uint256 value,uint256 nonce,uint256 deadline)");
     /**
      * @dev In previous versions `_PERMIT_TYPEHASH` was declared as `immutable`.
      * However, to ensure consistency with the upgradeable transpiler, we will continue
@@ -4745,9 +4568,7 @@ abstract contract ERC20Permit is ERC20, IERC20Permit, EIP712 {
     ) public virtual override {
         require(block.timestamp <= deadline, "ERC20Permit: expired deadline");
 
-        bytes32 structHash = keccak256(
-            abi.encode(_PERMIT_TYPEHASH, owner, spender, value, _useNonce(owner), deadline)
-        );
+        bytes32 structHash = keccak256(abi.encode(_PERMIT_TYPEHASH, owner, spender, value, _useNonce(owner), deadline));
 
         bytes32 hash = _hashTypedDataV4(structHash);
 
@@ -4784,10 +4605,12 @@ abstract contract ERC20Permit is ERC20, IERC20Permit, EIP712 {
     }
 }
 
+
 // File contracts/LamboLlama.sol
 
 // Original license: SPDX_License_Identifier: MIT
 pragma solidity 0.8.22;
+
 
 contract LamboLlama is OFT, ERC20Permit {
     constructor(

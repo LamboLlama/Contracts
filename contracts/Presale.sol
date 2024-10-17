@@ -2,11 +2,15 @@
 pragma solidity 0.8.22;
 
 import {ECDSA} from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
-import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {SafeMath} from "@openzeppelin/contracts/utils/math/SafeMath.sol";
+import {IERC20, SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {ReentrancyGuard} from "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
 contract Presale is Ownable, ReentrancyGuard {
+    using SafeMath for uint256;
+    using SafeERC20 for IERC20;
+
     struct Contribution {
         uint256 amount; // Actual ETH invested
         uint256 effectiveAmount; // Effective ETH after bonus
@@ -20,8 +24,9 @@ contract Presale is Ownable, ReentrancyGuard {
     error TransferFailed();
     error AlreadyDeposited();
 
-    error InvalidClaimInput();
-    error InvalidFundingInput();
+    error InvalidWalletInput();
+    error InvalidPresaleClaimInput();
+    error InvalidPresaleInput();
     error InvalidWhitelistInput();
 
     error NotWhitelisted();
@@ -37,25 +42,28 @@ contract Presale is Ownable, ReentrancyGuard {
     uint256 public constant ONE_PERCENT = 10 ** 27;
     uint256 public constant ONE_HUNDRED_PERCENT = 100 * ONE_PERCENT;
 
-    IERC20 public token;
+    IERC20 public immutable token;
+
+    bool public tokensDeposited;
+
+    uint256 public presaleSupply;
+
+    uint256 public totalEth;
+    uint256 public totalEthEffective;
+
+    uint256 public whitelistStartTime;
+    uint256 public whitelistEndTime;
+
     uint256 public publicPresaleStartTime;
     uint256 public publicPresaleEndTime;
-    uint256 public presaleClaimStartTime;
-    uint256 public vestingEndTime; // 1 month after presaleClaimStartTime
-    uint256 public whitelistStartTime; // Start time for whitelist presale
-    uint256 public whitelistEndTime; // End time for whitelist presale
 
-    uint256 public totalEth; // Actual ETH deposited
-    uint256 public totalEthEffective; // Effective ETH after bonus
-    uint256 public presaleSupply;
+    uint256 public presaleClaimStartTime;
+    uint256 public presaleVestingEndTime;
 
     uint256[] public bonusRates;
     uint256[] public bonusThresholds;
 
     mapping(address => Contribution) public contributions;
-
-    bool public tokensDeposited;
-    bool public fundsWithdrawn;
 
     address public whitelistSigner; // Signer for whitelist presale
     address payable public treasuryWallet; // Wallet address to receive ETH immediately
@@ -76,18 +84,19 @@ contract Presale is Ownable, ReentrancyGuard {
         uint256 _publicPresaleEndTime,
         uint256 _presaleClaimStartTime
     ) {
+        if (_presaleSupply == 0 || _presaleSupply < 1000 ether) revert InvalidPresaleInput();
+        if (_treasuryWallet == address(0)) revert InvalidWalletInput();
+
         if (_whitelistEndTime < _whitelistStartTime) revert InvalidWhitelistInput();
         if (_publicPresaleStartTime < _whitelistEndTime) revert InvalidWhitelistInput();
-        if (_publicPresaleEndTime < _publicPresaleStartTime) revert InvalidFundingInput();
-        if (_presaleClaimStartTime < _publicPresaleEndTime) revert InvalidClaimInput();
-        if (_presaleSupply == 0) revert InvalidFundingInput();
-        if (_treasuryWallet == address(0)) revert TransferFailed();
+        if (_publicPresaleEndTime < _publicPresaleStartTime) revert InvalidPresaleInput();
+        if (_presaleClaimStartTime < _publicPresaleEndTime) revert InvalidPresaleClaimInput();
 
         token = _token;
         publicPresaleStartTime = _publicPresaleStartTime;
         publicPresaleEndTime = _publicPresaleEndTime;
         presaleClaimStartTime = _presaleClaimStartTime;
-        vestingEndTime = presaleClaimStartTime + 30 days; // Vesting ends 1 month after claim start
+        presaleVestingEndTime = presaleClaimStartTime + 30 days; // Vesting ends 1 month after claim start
         whitelistStartTime = _whitelistStartTime;
         whitelistEndTime = _whitelistEndTime;
 
@@ -207,8 +216,9 @@ contract Presale is Ownable, ReentrancyGuard {
             revert NoContributionsToClaim();
 
         if (!userContribution.claimed) {
-            uint256 immediateTokens = (userContribution.amount * presaleSupply) /
-                totalEthEffective;
+            uint256 immediateTokens = userContribution.amount.mul(presaleSupply).div(
+                totalEthEffective
+            );
 
             userContribution.claimed = true;
 
@@ -233,13 +243,13 @@ contract Presale is Ownable, ReentrancyGuard {
     }
 
     function _vestedBonusTokens(uint256 bonusTokens) internal view returns (uint256) {
-        if (block.timestamp >= vestingEndTime) {
+        if (block.timestamp >= presaleVestingEndTime) {
             return bonusTokens;
         } else {
-            uint256 vestingDuration = vestingEndTime - presaleClaimStartTime;
+            uint256 vestingDuration = presaleVestingEndTime - presaleClaimStartTime;
             uint256 timeElapsed = block.timestamp - presaleClaimStartTime;
 
-            return (bonusTokens * timeElapsed) / vestingDuration;
+            return bonusTokens.mul(timeElapsed).div(vestingDuration);
         }
     }
 

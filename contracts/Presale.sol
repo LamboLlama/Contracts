@@ -15,41 +15,39 @@ contract Presale is Ownable, ReentrancyGuard {
     }
 
     // Custom errors for better gas efficiency
-    error NotInFundingPeriod();
-    error FundingPeriodNotEnded();
-    error ClaimPeriodNotStarted();
-    error AlreadyDeposited();
+    error NoValue();
+
     error TransferFailed();
-    error InvalidWhitelistPeriod();
-    error InvalidFundingPeriod();
-    error InvalidClaimPeriod();
-    error NoContributionsToClaim();
-    error ClaimExceedsEffectiveAmount();
+    error AlreadyDeposited();
+
+    error InvalidClaimInput();
+    error InvalidFundingInput();
+    error InvalidWhitelistInput();
+
     error NotWhitelisted();
-    error WhitelistPeriodNotStarted();
-    error WhitelistPeriodEnded();
+    error ClaimPeriodNotStarted();
+    error NoContributionsToClaim();
+    error NotInContributionPeriod();
 
     event TokensDeposited(uint256 amount);
-    event DepositReceived(address indexed user, uint256 amount, uint256 effectiveAmount);
+    event ContributionReceived(address indexed user, uint256 amount, uint256 effectiveAmount);
     event TokensClaimed(address indexed user, uint256 amount);
     event BonusTokensClaimed(address indexed user, uint256 amount);
-    event AddressWhitelisted(address indexed user);
-    event AddressRemovedFromWhitelist(address indexed user);
 
     uint256 public constant ONE_PERCENT = 10 ** 27;
     uint256 public constant ONE_HUNDRED_PERCENT = 100 * ONE_PERCENT;
 
     IERC20 public token;
-    uint256 public fundingStartTime;
-    uint256 public fundingEndTime;
-    uint256 public claimStartTime;
-    uint256 public vestingEndTime; // 1 month after claimStartTime
+    uint256 public publicPresaleStartTime;
+    uint256 public publicPresaleEndTime;
+    uint256 public presaleClaimStartTime;
+    uint256 public vestingEndTime; // 1 month after presaleClaimStartTime
     uint256 public whitelistStartTime; // Start time for whitelist presale
     uint256 public whitelistEndTime; // End time for whitelist presale
 
     uint256 public totalEth; // Actual ETH deposited
     uint256 public totalEthEffective; // Effective ETH after bonus
-    uint256 public totalTokensForSale;
+    uint256 public presaleSupply;
 
     uint256[] public bonusRates;
     uint256[] public bonusThresholds;
@@ -60,43 +58,43 @@ contract Presale is Ownable, ReentrancyGuard {
     bool public fundsWithdrawn;
 
     address public whitelistSigner; // Signer for whitelist presale
-    address payable public fundsWallet; // Wallet address to receive ETH immediately
+    address payable public treasuryWallet; // Wallet address to receive ETH immediately
 
     modifier afterClaimStart() {
-        if (block.timestamp <= claimStartTime) revert ClaimPeriodNotStarted();
+        if (block.timestamp <= presaleClaimStartTime) revert ClaimPeriodNotStarted();
         _;
     }
 
     constructor(
         IERC20 _token,
+        uint256 _presaleSupply,
+        address _whitelistSigner,
+        address payable _treasuryWallet,
         uint256 _whitelistStartTime,
         uint256 _whitelistEndTime,
-        uint256 _fundingStartTime,
-        uint256 _fundingEndTime,
-        uint256 _claimStartTime,
-        uint256 _totalTokensForSale,
-        address payable _fundsWallet,
-        address _whitelistSigner
+        uint256 _publicPresaleStartTime,
+        uint256 _publicPresaleEndTime,
+        uint256 _presaleClaimStartTime
     ) {
-        if (_whitelistEndTime < _whitelistStartTime) revert InvalidWhitelistPeriod();
-        if (_fundingStartTime < _whitelistEndTime) revert InvalidWhitelistPeriod();
-        if (_fundingEndTime < _fundingStartTime) revert InvalidFundingPeriod();
-        if (_claimStartTime < _fundingEndTime) revert InvalidClaimPeriod();
-        if (_totalTokensForSale == 0) revert InvalidFundingPeriod();
-        if (_fundsWallet == address(0)) revert TransferFailed();
+        if (_whitelistEndTime < _whitelistStartTime) revert InvalidWhitelistInput();
+        if (_publicPresaleStartTime < _whitelistEndTime) revert InvalidWhitelistInput();
+        if (_publicPresaleEndTime < _publicPresaleStartTime) revert InvalidFundingInput();
+        if (_presaleClaimStartTime < _publicPresaleEndTime) revert InvalidClaimInput();
+        if (_presaleSupply == 0) revert InvalidFundingInput();
+        if (_treasuryWallet == address(0)) revert TransferFailed();
 
         token = _token;
-        fundingStartTime = _fundingStartTime;
-        fundingEndTime = _fundingEndTime;
-        claimStartTime = _claimStartTime;
-        vestingEndTime = claimStartTime + 30 days; // Vesting ends 1 month after claim start
+        publicPresaleStartTime = _publicPresaleStartTime;
+        publicPresaleEndTime = _publicPresaleEndTime;
+        presaleClaimStartTime = _presaleClaimStartTime;
+        vestingEndTime = presaleClaimStartTime + 30 days; // Vesting ends 1 month after claim start
         whitelistStartTime = _whitelistStartTime;
         whitelistEndTime = _whitelistEndTime;
 
-        fundsWallet = _fundsWallet;
+        treasuryWallet = _treasuryWallet;
         whitelistSigner = _whitelistSigner;
 
-        totalTokensForSale = _totalTokensForSale;
+        presaleSupply = _presaleSupply;
 
         // Initialize bonus thresholds and rates
         bonusRates = [40 * ONE_PERCENT, 30 * ONE_PERCENT, 15 * ONE_PERCENT, 0];
@@ -105,9 +103,9 @@ contract Presale is Ownable, ReentrancyGuard {
 
     function depositTokens() external onlyOwner {
         if (tokensDeposited) revert AlreadyDeposited();
-        token.transferFrom(msg.sender, address(this), totalTokensForSale);
+        token.transferFrom(msg.sender, address(this), presaleSupply);
         tokensDeposited = true;
-        emit TokensDeposited(totalTokensForSale);
+        emit TokensDeposited(presaleSupply);
     }
 
     function isWhitelisted(bytes memory signature) external view returns (bool) {
@@ -119,66 +117,88 @@ contract Presale is Ownable, ReentrancyGuard {
 
     function contribute(bytes memory signature) public payable nonReentrant {
         if (msg.value == 0) {
-            revert TransferFailed();
+            revert NoValue();
         }
 
-        if (block.timestamp >= whitelistStartTime && block.timestamp <= whitelistEndTime) {
+        if (block.timestamp < whitelistStartTime || block.timestamp > publicPresaleEndTime) {
+            revert NotInContributionPeriod();
+        }
+
+        if (block.timestamp <= whitelistEndTime) {
+            if (signature.length == 0) {
+                revert NotWhitelisted();
+            }
+
             bytes32 messageHash = keccak256(abi.encodePacked(msg.sender));
             bytes32 ethSignedMessageHash = ECDSA.toEthSignedMessageHash(messageHash);
 
             if (ECDSA.recover(ethSignedMessageHash, signature) != whitelistSigner) {
                 revert NotWhitelisted();
             }
-        } else if (block.timestamp < fundingStartTime || block.timestamp > fundingEndTime) {
-            revert NotInFundingPeriod();
         }
 
         uint256 remainingDeposit = msg.value;
         uint256 effectiveAmount;
-        uint256 totalEthAfter = totalEth;
 
-        for (uint256 i = 0; i < bonusThresholds.length; i++) {
-            uint256 currentThreshold = bonusThresholds[i];
-            uint256 currentBonusRate = bonusRates[i];
-
-            if (totalEthAfter >= currentThreshold) {
-                continue; // Move to the next threshold if current is already reached
-            }
-
-            uint256 remainingCapacity = currentThreshold - totalEthAfter;
-
-            uint256 amountInThisThreshold = remainingDeposit <= remainingCapacity
+        // Apply bonus for the first threshold (up to 5 ETH)
+        if (totalEth < bonusThresholds[0]) {
+            uint256 thresholdAmount = bonusThresholds[0] - totalEth;
+            uint256 amountInThisThreshold = remainingDeposit <= thresholdAmount
                 ? remainingDeposit
-                : remainingCapacity;
-
-            uint256 bonusAmount = (amountInThisThreshold * currentBonusRate) / ONE_HUNDRED_PERCENT;
+                : thresholdAmount;
+            uint256 bonusAmount = (amountInThisThreshold * bonusRates[0]) / ONE_HUNDRED_PERCENT;
             effectiveAmount += amountInThisThreshold + bonusAmount;
-            totalEthAfter += amountInThisThreshold;
             remainingDeposit -= amountInThisThreshold;
-
-            if (remainingDeposit == 0) {
-                break; // Stop the loop once the entire deposit has been allocated
-            }
+            totalEth += amountInThisThreshold;
         }
 
-        // For any remaining deposit beyond the highest threshold (20 ether), no bonus is applied
+        // Apply bonus for the second threshold (between 5 ETH and 10 ETH)
+        if (
+            remainingDeposit > 0 && totalEth >= bonusThresholds[0] && totalEth < bonusThresholds[1]
+        ) {
+            uint256 thresholdAmount = bonusThresholds[1] - totalEth;
+            uint256 amountInThisThreshold = remainingDeposit <= thresholdAmount
+                ? remainingDeposit
+                : thresholdAmount;
+            uint256 bonusAmount = (amountInThisThreshold * bonusRates[1]) / ONE_HUNDRED_PERCENT;
+            effectiveAmount += amountInThisThreshold + bonusAmount;
+            remainingDeposit -= amountInThisThreshold;
+            totalEth += amountInThisThreshold;
+        }
+
+        // Apply bonus for the third threshold (between 10 ETH and 20 ETH)
+        if (
+            remainingDeposit > 0 && totalEth >= bonusThresholds[1] && totalEth < bonusThresholds[2]
+        ) {
+            uint256 thresholdAmount = bonusThresholds[2] - totalEth;
+            uint256 amountInThisThreshold = remainingDeposit <= thresholdAmount
+                ? remainingDeposit
+                : thresholdAmount;
+            uint256 bonusAmount = (amountInThisThreshold * bonusRates[2]) / ONE_HUNDRED_PERCENT;
+            effectiveAmount += amountInThisThreshold + bonusAmount;
+            remainingDeposit -= amountInThisThreshold;
+            totalEth += amountInThisThreshold;
+        }
+
+        // Apply no bonus for deposits exceeding 20 ETH
         if (remainingDeposit > 0) {
             effectiveAmount += remainingDeposit;
-            totalEthAfter += remainingDeposit;
+            totalEth += remainingDeposit;
         }
 
-        totalEth += msg.value;
         totalEthEffective += effectiveAmount;
 
         Contribution storage userContribution = contributions[msg.sender];
-
         userContribution.amount += msg.value;
         userContribution.effectiveAmount += effectiveAmount;
 
-        emit DepositReceived(msg.sender, msg.value, effectiveAmount);
+        (bool success, ) = treasuryWallet.call{value: msg.value}("");
 
-        (bool success, ) = fundsWallet.call{value: msg.value}("");
-        if (!success) revert TransferFailed();
+        if (!success) {
+            revert TransferFailed();
+        }
+
+        emit ContributionReceived(msg.sender, msg.value, effectiveAmount);
     }
 
     function claim() external afterClaimStart nonReentrant {
@@ -187,7 +207,7 @@ contract Presale is Ownable, ReentrancyGuard {
             revert NoContributionsToClaim();
 
         if (!userContribution.claimed) {
-            uint256 immediateTokens = (userContribution.amount * totalTokensForSale) /
+            uint256 immediateTokens = (userContribution.amount * presaleSupply) /
                 totalEthEffective;
 
             userContribution.claimed = true;
@@ -216,8 +236,8 @@ contract Presale is Ownable, ReentrancyGuard {
         if (block.timestamp >= vestingEndTime) {
             return bonusTokens;
         } else {
-            uint256 vestingDuration = vestingEndTime - claimStartTime;
-            uint256 timeElapsed = block.timestamp - claimStartTime;
+            uint256 vestingDuration = vestingEndTime - presaleClaimStartTime;
+            uint256 timeElapsed = block.timestamp - presaleClaimStartTime;
 
             return (bonusTokens * timeElapsed) / vestingDuration;
         }

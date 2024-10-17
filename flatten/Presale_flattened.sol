@@ -1,5 +1,3 @@
-
-
 // Sources flattened with hardhat v2.22.5 https://hardhat.org
 
 // SPDX-License-Identifier: MIT
@@ -30,7 +28,6 @@ abstract contract Context {
         return msg.data;
     }
 }
-
 
 // File @openzeppelin/contracts/access/Ownable.sol@v4.9.2
 
@@ -116,7 +113,6 @@ abstract contract Ownable is Context {
     }
 }
 
-
 // File @openzeppelin/contracts/utils/math/Math.sol@v4.9.2
 
 // Original license: SPDX_License_Identifier: MIT
@@ -173,7 +169,11 @@ library Math {
      * @dev Original credit to Remco Bloemen under MIT license (https://xn--2-umb.com/21/muldiv)
      * with further edits by Uniswap Labs also under MIT license.
      */
-    function mulDiv(uint256 x, uint256 y, uint256 denominator) internal pure returns (uint256 result) {
+    function mulDiv(
+        uint256 x,
+        uint256 y,
+        uint256 denominator
+    ) internal pure returns (uint256 result) {
         unchecked {
             // 512-bit multiply [prod1 prod0] = x * y. Compute the product mod 2^256 and mod 2^256 - 1, then use
             // use the Chinese Remainder Theorem to reconstruct the 512 bit result. The result is stored in two 256
@@ -257,7 +257,12 @@ library Math {
     /**
      * @notice Calculates x * y / denominator with full precision, following the selected rounding direction.
      */
-    function mulDiv(uint256 x, uint256 y, uint256 denominator, Rounding rounding) internal pure returns (uint256) {
+    function mulDiv(
+        uint256 x,
+        uint256 y,
+        uint256 denominator,
+        Rounding rounding
+    ) internal pure returns (uint256) {
         uint256 result = mulDiv(x, y, denominator);
         if (rounding == Rounding.Up && mulmod(x, y, denominator) > 0) {
             result += 1;
@@ -459,7 +464,6 @@ library Math {
     }
 }
 
-
 // File @openzeppelin/contracts/utils/math/SignedMath.sol@v4.9.2
 
 // Original license: SPDX_License_Identifier: MIT
@@ -506,14 +510,12 @@ library SignedMath {
     }
 }
 
-
 // File @openzeppelin/contracts/utils/Strings.sol@v4.9.2
 
 // Original license: SPDX_License_Identifier: MIT
 // OpenZeppelin Contracts (last updated v4.9.0) (utils/Strings.sol)
 
 pragma solidity ^0.8.0;
-
 
 /**
  * @dev String operations.
@@ -593,7 +595,6 @@ library Strings {
     }
 }
 
-
 // File @openzeppelin/contracts/utils/cryptography/ECDSA.sol@v4.9.2
 
 // Original license: SPDX_License_Identifier: MIT
@@ -648,7 +649,10 @@ library ECDSA {
      *
      * _Available since v4.3._
      */
-    function tryRecover(bytes32 hash, bytes memory signature) internal pure returns (address, RecoverError) {
+    function tryRecover(
+        bytes32 hash,
+        bytes memory signature
+    ) internal pure returns (address, RecoverError) {
         if (signature.length == 65) {
             bytes32 r;
             bytes32 s;
@@ -694,8 +698,13 @@ library ECDSA {
      *
      * _Available since v4.3._
      */
-    function tryRecover(bytes32 hash, bytes32 r, bytes32 vs) internal pure returns (address, RecoverError) {
-        bytes32 s = vs & bytes32(0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+    function tryRecover(
+        bytes32 hash,
+        bytes32 r,
+        bytes32 vs
+    ) internal pure returns (address, RecoverError) {
+        bytes32 s = vs &
+            bytes32(0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
         uint8 v = uint8((uint256(vs) >> 255) + 27);
         return tryRecover(hash, v, r, s);
     }
@@ -717,7 +726,12 @@ library ECDSA {
      *
      * _Available since v4.3._
      */
-    function tryRecover(bytes32 hash, uint8 v, bytes32 r, bytes32 s) internal pure returns (address, RecoverError) {
+    function tryRecover(
+        bytes32 hash,
+        uint8 v,
+        bytes32 r,
+        bytes32 s
+    ) internal pure returns (address, RecoverError) {
         // EIP-2 still allows signature malleability for ecrecover(). Remove this possibility and make the signature
         // unique. Appendix F in the Ethereum Yellow paper (https://ethereum.github.io/yellowpaper/paper.pdf), defines
         // the valid range for s in (301): 0 < s < secp256k1n ÷ 2 + 1, and for v in (302): v ∈ {27, 28}. Most
@@ -778,7 +792,10 @@ library ECDSA {
      * See {recover}.
      */
     function toEthSignedMessageHash(bytes memory s) internal pure returns (bytes32) {
-        return keccak256(abi.encodePacked("\x19Ethereum Signed Message:\n", Strings.toString(s.length), s));
+        return
+            keccak256(
+                abi.encodePacked("\x19Ethereum Signed Message:\n", Strings.toString(s.length), s)
+            );
     }
 
     /**
@@ -790,7 +807,10 @@ library ECDSA {
      *
      * See {recover}.
      */
-    function toTypedDataHash(bytes32 domainSeparator, bytes32 structHash) internal pure returns (bytes32 data) {
+    function toTypedDataHash(
+        bytes32 domainSeparator,
+        bytes32 structHash
+    ) internal pure returns (bytes32 data) {
         /// @solidity memory-safe-assembly
         assembly {
             let ptr := mload(0x40)
@@ -807,11 +827,13 @@ library ECDSA {
      *
      * See {recover}.
      */
-    function toDataWithIntendedValidatorHash(address validator, bytes memory data) internal pure returns (bytes32) {
+    function toDataWithIntendedValidatorHash(
+        address validator,
+        bytes memory data
+    ) internal pure returns (bytes32) {
         return keccak256(abi.encodePacked("\x19\x00", validator, data));
     }
 }
-
 
 // File @openzeppelin/contracts/security/ReentrancyGuard.sol@v4.9.2
 
@@ -892,7 +914,6 @@ abstract contract ReentrancyGuard {
         return _status == _ENTERED;
     }
 }
-
 
 // File @openzeppelin/contracts/token/ERC20/IERC20.sol@v4.9.2
 
@@ -975,14 +996,10 @@ interface IERC20 {
     function transferFrom(address from, address to, uint256 amount) external returns (bool);
 }
 
-
 // File contracts/Presale.sol
 
 // Original license: SPDX_License_Identifier: MIT
 pragma solidity 0.8.22;
-
-
-
 
 contract Presale is Ownable, ReentrancyGuard {
     struct Contribution {
@@ -998,9 +1015,9 @@ contract Presale is Ownable, ReentrancyGuard {
     error ClaimPeriodNotStarted();
     error AlreadyDeposited();
     error TransferFailed();
-    error InvalidWhitelistPeriod();
-    error InvalidFundingPeriod();
-    error InvalidClaimPeriod();
+    error InvalidWhitelistInput();
+    error InvalidFundingInput();
+    error InvalidClaimInput();
     error NoContributionsToClaim();
     error ClaimExceedsEffectiveAmount();
     error NotWhitelisted();
@@ -1018,16 +1035,16 @@ contract Presale is Ownable, ReentrancyGuard {
     uint256 public constant ONE_HUNDRED_PERCENT = 100 * ONE_PERCENT;
 
     IERC20 public token;
-    uint256 public fundingStartTime;
-    uint256 public fundingEndTime;
-    uint256 public claimStartTime;
-    uint256 public vestingEndTime; // 1 month after claimStartTime
+    uint256 public publicPresaleStartTime;
+    uint256 public publicPresaleEndTime;
+    uint256 public presaleClaimStartTime;
+    uint256 public vestingEndTime; // 1 month after presaleClaimStartTime
     uint256 public whitelistStartTime; // Start time for whitelist presale
     uint256 public whitelistEndTime; // End time for whitelist presale
 
     uint256 public totalEth; // Actual ETH deposited
     uint256 public totalEthEffective; // Effective ETH after bonus
-    uint256 public totalTokensForSale;
+    uint256 public presaleSupply;
 
     uint256[] public bonusRates;
     uint256[] public bonusThresholds;
@@ -1038,10 +1055,10 @@ contract Presale is Ownable, ReentrancyGuard {
     bool public fundsWithdrawn;
 
     address public whitelistSigner; // Signer for whitelist presale
-    address payable public fundsWallet; // Wallet address to receive ETH immediately
+    address payable public treasuryWallet; // Wallet address to receive ETH immediately
 
     modifier afterClaimStart() {
-        if (block.timestamp <= claimStartTime) revert ClaimPeriodNotStarted();
+        if (block.timestamp <= presaleClaimStartTime) revert ClaimPeriodNotStarted();
         _;
     }
 
@@ -1049,32 +1066,32 @@ contract Presale is Ownable, ReentrancyGuard {
         IERC20 _token,
         uint256 _whitelistStartTime,
         uint256 _whitelistEndTime,
-        uint256 _fundingStartTime,
-        uint256 _fundingEndTime,
-        uint256 _claimStartTime,
-        uint256 _totalTokensForSale,
-        address payable _fundsWallet,
+        uint256 _publicPresaleStartTime,
+        uint256 _publicPresaleEndTime,
+        uint256 _presaleClaimStartTime,
+        uint256 _presaleSupply,
+        address payable _treasuryWallet,
         address _whitelistSigner
     ) {
-        if (_whitelistEndTime < _whitelistStartTime) revert InvalidWhitelistPeriod();
-        if (_fundingStartTime < _whitelistEndTime) revert InvalidWhitelistPeriod();
-        if (_fundingEndTime < _fundingStartTime) revert InvalidFundingPeriod();
-        if (_claimStartTime < _fundingEndTime) revert InvalidClaimPeriod();
-        if (_totalTokensForSale == 0) revert InvalidFundingPeriod();
-        if (_fundsWallet == address(0)) revert TransferFailed();
+        if (_whitelistEndTime < _whitelistStartTime) revert InvalidWhitelistInput();
+        if (_publicPresaleStartTime < _whitelistEndTime) revert InvalidWhitelistInput();
+        if (_publicPresaleEndTime < _publicPresaleStartTime) revert InvalidFundingInput();
+        if (_presaleClaimStartTime < _publicPresaleEndTime) revert InvalidClaimInput();
+        if (_presaleSupply == 0) revert InvalidFundingInput();
+        if (_treasuryWallet == address(0)) revert TransferFailed();
 
         token = _token;
-        fundingStartTime = _fundingStartTime;
-        fundingEndTime = _fundingEndTime;
-        claimStartTime = _claimStartTime;
-        vestingEndTime = claimStartTime + 30 days; // Vesting ends 1 month after claim start
+        publicPresaleStartTime = _publicPresaleStartTime;
+        publicPresaleEndTime = _publicPresaleEndTime;
+        presaleClaimStartTime = _presaleClaimStartTime;
+        vestingEndTime = presaleClaimStartTime + 30 days; // Vesting ends 1 month after claim start
         whitelistStartTime = _whitelistStartTime;
         whitelistEndTime = _whitelistEndTime;
 
-        fundsWallet = _fundsWallet;
+        treasuryWallet = _treasuryWallet;
         whitelistSigner = _whitelistSigner;
 
-        totalTokensForSale = _totalTokensForSale;
+        presaleSupply = _presaleSupply;
 
         // Initialize bonus thresholds and rates
         bonusRates = [40 * ONE_PERCENT, 30 * ONE_PERCENT, 15 * ONE_PERCENT, 0];
@@ -1083,9 +1100,9 @@ contract Presale is Ownable, ReentrancyGuard {
 
     function depositTokens() external onlyOwner {
         if (tokensDeposited) revert AlreadyDeposited();
-        token.transferFrom(msg.sender, address(this), totalTokensForSale);
+        token.transferFrom(msg.sender, address(this), presaleSupply);
         tokensDeposited = true;
-        emit TokensDeposited(totalTokensForSale);
+        emit TokensDeposited(presaleSupply);
     }
 
     function isWhitelisted(bytes memory signature) external view returns (bool) {
@@ -1107,7 +1124,9 @@ contract Presale is Ownable, ReentrancyGuard {
             if (ECDSA.recover(ethSignedMessageHash, signature) != whitelistSigner) {
                 revert NotWhitelisted();
             }
-        } else if (block.timestamp < fundingStartTime || block.timestamp > fundingEndTime) {
+        } else if (
+            block.timestamp < publicPresaleStartTime || block.timestamp > publicPresaleEndTime
+        ) {
             revert NotInFundingPeriod();
         }
 
@@ -1155,7 +1174,7 @@ contract Presale is Ownable, ReentrancyGuard {
 
         emit DepositReceived(msg.sender, msg.value, effectiveAmount);
 
-        (bool success, ) = fundsWallet.call{value: msg.value}("");
+        (bool success, ) = treasuryWallet.call{value: msg.value}("");
         if (!success) revert TransferFailed();
     }
 
@@ -1165,7 +1184,7 @@ contract Presale is Ownable, ReentrancyGuard {
             revert NoContributionsToClaim();
 
         if (!userContribution.claimed) {
-            uint256 immediateTokens = (userContribution.amount * totalTokensForSale) /
+            uint256 immediateTokens = (userContribution.amount * presaleSupply) /
                 totalEthEffective;
 
             userContribution.claimed = true;
@@ -1194,8 +1213,8 @@ contract Presale is Ownable, ReentrancyGuard {
         if (block.timestamp >= vestingEndTime) {
             return bonusTokens;
         } else {
-            uint256 vestingDuration = vestingEndTime - claimStartTime;
-            uint256 timeElapsed = block.timestamp - claimStartTime;
+            uint256 vestingDuration = vestingEndTime - presaleClaimStartTime;
+            uint256 timeElapsed = block.timestamp - presaleClaimStartTime;
 
             return (bonusTokens * timeElapsed) / vestingDuration;
         }

@@ -57,7 +57,7 @@ contract Presale is Ownable, ReentrancyGuard {
     event BonusTokensClaimed(address indexed user, uint256 amount);
 
     // Constants for the presale
-    uint256 public constant MIN_CONTRIBUTION = 0.0002 ether; // Minimum contribution amount about 50 cents
+    uint256 private constant MIN_CONTRIBUTION = 0.0002 ether; // Minimum contribution amount about 50 cents
     uint256 private constant MIN_SUPPLY = 1000 ether; // Minimum presale supply required
 
     // Constants for percentage calculations
@@ -231,63 +231,38 @@ contract Presale is Ownable, ReentrancyGuard {
         }
 
         uint256 remainingDeposit = msg.value; // Remaining ETH to process
-        uint256 effectiveAmount; // Total effective amount after bonuses
+        uint256 effectiveAmount = 0; // Total effective amount after bonuses
 
-        // Apply bonus for the first threshold (up to 5 ETH)
-        if (totalEth < bonusThresholds[0]) {
-            uint256 thresholdAmount = bonusThresholds[0] - totalEth; // Remaining amount in first threshold
+        // Iterate through bonus thresholds and apply bonuses
+        for (uint256 i = 0; i < bonusThresholds.length; i++) {
+            if (remainingDeposit == 0 || totalEth >= bonusThresholds[i]) {
+                // If no remaining ETH to process or we've exceeded the threshold, break
+                continue;
+            }
+
+            uint256 thresholdAmount = bonusThresholds[i] - totalEth;
             uint256 amountInThisThreshold = remainingDeposit <= thresholdAmount
                 ? remainingDeposit
-                : thresholdAmount; // Amount to process in this threshold
-            uint256 bonusAmount = (amountInThisThreshold * bonusRates[0]) / ONE_HUNDRED_PERCENT; // Calculate bonus
+                : thresholdAmount; // Calculate how much ETH can be processed in this threshold
+            uint256 bonusAmount = (amountInThisThreshold * bonusRates[i]) / ONE_HUNDRED_PERCENT; // Calculate bonus
 
-            effectiveAmount = effectiveAmount + amountInThisThreshold + bonusAmount; // Update effective amount
-            remainingDeposit = remainingDeposit - amountInThisThreshold; // Update remaining deposit
-            totalEth = totalEth + amountInThisThreshold; // Update total ETH collected
-        }
-
-        // Apply bonus for the second threshold (between 5 ETH and 10 ETH)
-        if (
-            remainingDeposit > 0 && totalEth >= bonusThresholds[0] && totalEth < bonusThresholds[1]
-        ) {
-            uint256 thresholdAmount = bonusThresholds[1] - totalEth; // Remaining amount in second threshold
-            uint256 amountInThisThreshold = remainingDeposit <= thresholdAmount
-                ? remainingDeposit
-                : thresholdAmount; // Amount to process in this threshold
-            uint256 bonusAmount = (amountInThisThreshold * bonusRates[1]) / ONE_HUNDRED_PERCENT; // Calculate bonus
-
-            effectiveAmount = effectiveAmount + amountInThisThreshold + bonusAmount; // Update effective amount
-            remainingDeposit = remainingDeposit - amountInThisThreshold; // Update remaining deposit
-            totalEth = totalEth + amountInThisThreshold; // Update total ETH collected
-        }
-
-        // Apply bonus for the third threshold (between 10 ETH and 20 ETH)
-        if (
-            remainingDeposit > 0 && totalEth >= bonusThresholds[1] && totalEth < bonusThresholds[2]
-        ) {
-            uint256 thresholdAmount = bonusThresholds[2] - totalEth; // Remaining amount in third threshold
-            uint256 amountInThisThreshold = remainingDeposit <= thresholdAmount
-                ? remainingDeposit
-                : thresholdAmount; // Amount to process in this threshold
-            uint256 bonusAmount = (amountInThisThreshold * bonusRates[2]) / ONE_HUNDRED_PERCENT; // Calculate bonus
-
-            effectiveAmount = effectiveAmount + amountInThisThreshold + bonusAmount; // Update effective amount
-            remainingDeposit = remainingDeposit - amountInThisThreshold; // Update remaining deposit
-            totalEth = totalEth + amountInThisThreshold; // Update total ETH collected
+            effectiveAmount += amountInThisThreshold + bonusAmount; // Update effective amount
+            remainingDeposit -= amountInThisThreshold; // Update remaining deposit
+            totalEth += amountInThisThreshold; // Update total ETH collected
         }
 
         // Any remaining deposit beyond thresholds gets no bonus
         if (remainingDeposit > 0) {
-            effectiveAmount = effectiveAmount + remainingDeposit; // Add remaining deposit to effective amount
-            totalEth = totalEth + remainingDeposit; // Update total ETH collected
+            effectiveAmount += remainingDeposit; // Add remaining deposit to effective amount
+            totalEth += remainingDeposit; // Update total ETH collected
         }
 
-        totalEthEffective = totalEthEffective + effectiveAmount; // Update total effective ETH
+        totalEthEffective += effectiveAmount; // Update total effective ETH
 
         // Update user's contribution
         Contribution storage userContribution = contributions[msg.sender];
-        userContribution.amount = userContribution.amount + msg.value; // Update actual amount contributed
-        userContribution.effectiveAmount = userContribution.effectiveAmount + effectiveAmount; // Update effective amount
+        userContribution.amount += msg.value; // Update actual amount contributed
+        userContribution.effectiveAmount += effectiveAmount; // Update effective amount
 
         // Transfer the contributed ETH to the treasury wallet
         (bool success, ) = treasuryWallet.call{value: msg.value}("");

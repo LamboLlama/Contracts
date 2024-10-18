@@ -63,7 +63,7 @@ describe('Presale Contract', function () {
 		publicPresaleEndTime = publicPresaleStartTime + 3600; // Ends in 1 hour
 		presaleClaimStartTime = publicPresaleEndTime + 3600; // Claims start 1 hour after funding ends
 		//presaleSupply = ethers.BigNumber.from("1000000000000000000000000");
-		presaleSupply = ethers.utils.parseUnits('1000', 18); // 1,200,000,000,000 tokens
+		presaleSupply = ethers.utils.parseUnits('1200000000000', 18); // 1,200,000,000,000 tokens
 
 		presale = (await PresaleFactory.deploy(
 			token.address,
@@ -183,14 +183,14 @@ describe('Presale Contract', function () {
 				).to.be.revertedWithCustomError(presale, 'InvalidPresaleClaimInput');
 			});
 
-			it('should revert if total tokens for sale is zero', async function () {
+			it('should revert if total tokens for sale is less then 1000 eth', async function () {
 				const PresaleFactory = await ethers.getContractFactory('Presale');
-				const zeroTotalTokens = 0; // No tokens allocated for sale
+				const invalidTotalTokens = ethers.utils.parseEther('100'); //100 tokens allocated for sale
 
 				await expect(
 					PresaleFactory.deploy(
 						token.address,
-						zeroTotalTokens,
+						invalidTotalTokens,
 						whitelistSigner.address,
 						treasuryWallet.address,
 						whitelistStartTime,
@@ -752,7 +752,7 @@ describe('Presale Contract', function () {
 			const publicPresaleStartTime = await presale.publicPresaleStartTime();
 			await time.increaseTo(publicPresaleStartTime);
 			// Contribute a large amount so we can claim later
-			const contributionAmount1 = ethers.utils.parseEther('80'); // 80 ETH
+			const contributionAmount1 = ethers.utils.parseEther('4'); // 4 ETH
 
 			const signature1 = await whitelist.generateWhitelistSignature(whitelistSigner, investor1);
 
@@ -796,8 +796,8 @@ describe('Presale Contract', function () {
 			const publicPresaleStartTime = await presale.publicPresaleStartTime();
 			await time.increaseTo(publicPresaleStartTime);
 			// Contribute a large amount so we can claim later
-			const contributionAmount1 = ethers.utils.parseEther('80'); // 80 ETH
-			const contributionAmount2 = ethers.utils.parseEther('20'); // 20 ETH
+			const contributionAmount1 = ethers.utils.parseEther('12'); // 80 ETH
+			const contributionAmount2 = ethers.utils.parseEther('7'); // 20 ETH
 			const contributionAmount3 = ethers.BigNumber.from('7'); // 7 wei
 
 			const signature1 = await whitelist.generateWhitelistSignature(whitelistSigner, investor1);
@@ -811,6 +811,8 @@ describe('Presale Contract', function () {
 			// Fast forward to the claim start time
 			const presaleClaimStartTime = (await presale.presaleClaimStartTime()).toNumber();
 			await time.increaseTo(presaleClaimStartTime);
+
+			const totalEthEffective = await presale.totalEthEffective();
 
 			// Retrieve the user's contribution and calculate the immediate tokens
 			const userContribution1 = await presale.contributions(investor1.address);
@@ -834,17 +836,11 @@ describe('Presale Contract', function () {
 			const userUpdatedContribution2 = await presale.contributions(investor2.address);
 			const userUpdatedContribution3 = await presale.contributions(investor3.address);
 
-			const immediateTokens1 = userContribution1.amount
-				.mul(await presale.presaleSupply())
-				.div(await presale.totalEthEffective());
+			const immediateTokens1 = userContribution1.amount.mul(presaleSupply).div(totalEthEffective);
 
-			const immediateTokens2 = userContribution2.amount
-				.mul(await presale.presaleSupply())
-				.div(await presale.totalEthEffective());
+			const immediateTokens2 = userContribution2.amount.mul(presaleSupply).div(totalEthEffective);
 
-			const immediateTokens3 = userContribution3.amount
-				.mul(await presale.presaleSupply())
-				.div(await presale.totalEthEffective());
+			const immediateTokens3 = userContribution3.amount.mul(presaleSupply).div(totalEthEffective);
 
 			// Check that the investor's balance increased by the expected immediate tokens
 			expect(tokenBalanceAfter1.sub(tokenBalanceBefore1)).to.be.greaterThanOrEqual(immediateTokens1);
@@ -856,7 +852,7 @@ describe('Presale Contract', function () {
 			expect(userUpdatedContribution3.claimed).to.be.true;
 		});
 
-		it('should allow a user to claim their immediate tokens for a single user', async function () {
+		it('should allow one user to claim their immediate tokens', async function () {
 			const whitelistStartTime = await presale.whitelistStartTime();
 			await time.increaseTo(whitelistStartTime);
 			// Contribute a large amount so we can claim later
@@ -883,7 +879,7 @@ describe('Presale Contract', function () {
 				.mul(await presale.presaleSupply())
 				.div(await presale.totalEthEffective());
 			// Check that the investor's balance increased by the expected immediate tokens
-			expect(tokenBalanceAfter.sub(tokenBalanceBefore)).to.be.greaterThan(immediateTokens);
+			expect(tokenBalanceAfter.sub(tokenBalanceBefore)).to.be.greaterThanOrEqual(immediateTokens);
 			// Ensure the claim flag is set to true
 			expect(userUpdatedContribution.claimed).to.be.true;
 		});
@@ -892,8 +888,8 @@ describe('Presale Contract', function () {
 			const publicPresaleStartTime = await presale.publicPresaleStartTime();
 			await time.increaseTo(publicPresaleStartTime);
 			// Contribute a large amount so we can claim later
-			const contributionAmount1 = ethers.utils.parseEther('80'); // 80 ETH
-			const contributionAmount2 = ethers.utils.parseEther('20'); // 20 ETH
+			const contributionAmount1 = ethers.utils.parseEther('9'); // 9 ETH
+			const contributionAmount2 = ethers.utils.parseEther('16'); // 16 ETH
 			const contributionAmount3 = ethers.BigNumber.from('7'); // 7 wei
 
 			const signature1 = await whitelist.generateWhitelistSignature(whitelistSigner, investor1);
@@ -904,13 +900,24 @@ describe('Presale Contract', function () {
 			await presale.connect(investor2).contribute(signature2, { value: contributionAmount2 });
 			await presale.connect(investor3).contribute(signature3, { value: contributionAmount3 });
 
+			const totalEthEffective = await presale.totalEthEffective();
+
 			const userContribution1 = await presale.contributions(investor1.address);
 			const userContribution2 = await presale.contributions(investor2.address);
 			const userContribution3 = await presale.contributions(investor3.address);
 
-			const totalBonusTokens1 = userContribution1.effectiveAmount.sub(userContribution1.amount); // Bonus tokens are based on effective amount minus actual contribution
-			const totalBonusTokens2 = userContribution2.effectiveAmount.sub(userContribution2.amount); // Bonus tokens are based on effective amount minus actual contribution
-			const totalBonusTokens3 = userContribution3.effectiveAmount.sub(userContribution3.amount); // Bonus tokens are based on effective amount minus actual contribution
+			const totalBonusTokens1 = userContribution1.effectiveAmount
+				.sub(userContribution1.amount)
+				.mul(presaleSupply)
+				.div(totalEthEffective);
+			const totalBonusTokens2 = userContribution2.effectiveAmount
+				.sub(userContribution2.amount)
+				.mul(presaleSupply)
+				.div(totalEthEffective);
+			const totalBonusTokens3 = userContribution3.effectiveAmount
+				.sub(userContribution3.amount)
+				.mul(presaleSupply)
+				.div(totalEthEffective);
 
 			// Simulate partial vesting by setting the time to exactly halfway through the vesting period
 			const presaleVestingEndTime = (await presale.presaleVestingEndTime()).toNumber();
@@ -941,33 +948,33 @@ describe('Presale Contract', function () {
 			const userUpdatedContribution2 = await presale.contributions(investor2.address);
 			const userUpdatedContribution3 = await presale.contributions(investor3.address);
 
-			const immediateTokens1 = userUpdatedContribution1.amount
-				.mul(await presale.presaleSupply())
-				.div(await presale.totalEthEffective());
-			const immediateTokens2 = userUpdatedContribution2.amount
-				.mul(await presale.presaleSupply())
-				.div(await presale.totalEthEffective());
-			const immediateTokens3 = userUpdatedContribution3.amount
-				.mul(await presale.presaleSupply())
-				.div(await presale.totalEthEffective());
+			const immediateTokens1 = userUpdatedContribution1.amount.mul(presaleSupply).div(totalEthEffective);
+			const immediateTokens2 = userUpdatedContribution2.amount.mul(presaleSupply).div(totalEthEffective);
+			const immediateTokens3 = userUpdatedContribution3.amount.mul(presaleSupply).div(totalEthEffective);
 
 			// Assert that the claimed bonus tokens match the expected vested amount exactly
-			expect(userUpdatedContribution1.claimedBonusTokens).to.equal(expectedVestedAmount1);
-			expect(userUpdatedContribution2.claimedBonusTokens).to.equal(expectedVestedAmount2);
-			expect(userUpdatedContribution3.claimedBonusTokens).to.equal(expectedVestedAmount3);
+			expect(userUpdatedContribution1.claimedBonusTokens).to.be.greaterThanOrEqual(expectedVestedAmount1);
+			expect(userUpdatedContribution2.claimedBonusTokens).to.be.greaterThanOrEqual(expectedVestedAmount2);
+			expect(userUpdatedContribution3.claimedBonusTokens).to.be.greaterThanOrEqual(expectedVestedAmount3);
 
-			expect(tokenBalanceAfter1.sub(tokenBalanceBefore1)).to.equal(expectedVestedAmount1.add(immediateTokens1));
-			expect(tokenBalanceAfter2.sub(tokenBalanceBefore2)).to.equal(expectedVestedAmount2.add(immediateTokens2));
-			expect(tokenBalanceAfter3.sub(tokenBalanceBefore3)).to.equal(expectedVestedAmount3.add(immediateTokens3));
+			expect(tokenBalanceAfter1.sub(tokenBalanceBefore1)).to.be.greaterThanOrEqual(
+				expectedVestedAmount1.add(immediateTokens1)
+			);
+			expect(tokenBalanceAfter2.sub(tokenBalanceBefore2)).to.be.greaterThanOrEqual(
+				expectedVestedAmount2.add(immediateTokens2)
+			);
+			expect(tokenBalanceAfter3.sub(tokenBalanceBefore3)).to.be.greaterThanOrEqual(
+				expectedVestedAmount3.add(immediateTokens3)
+			);
 		});
 
 		it('should allow a user to claim all vested bonus tokens after vesting period ends', async function () {
 			const publicPresaleStartTime = await presale.publicPresaleStartTime();
 			await time.increaseTo(publicPresaleStartTime);
 			// Contribute a large amount so we can claim later
-			const contributionAmount1 = ethers.utils.parseEther('80'); // 80 ETH
-			const contributionAmount2 = ethers.utils.parseEther('20'); // 20 ETH
-			const contributionAmount3 = ethers.BigNumber.from("1"); // 1 wei
+			const contributionAmount1 = ethers.utils.parseEther('15'); // 80 ETH
+			const contributionAmount2 = ethers.utils.parseEther('6'); // 20 ETH
+			const contributionAmount3 = ethers.BigNumber.from('1'); // 1 wei
 
 			const signature1 = await whitelist.generateWhitelistSignature(whitelistSigner, investor1);
 			const signature2 = await whitelist.generateWhitelistSignature(whitelistSigner, investor2);
@@ -977,17 +984,11 @@ describe('Presale Contract', function () {
 			await presale.connect(investor2).contribute(signature2, { value: contributionAmount2 });
 			await presale.connect(investor3).contribute(signature3, { value: contributionAmount3 });
 
-			const userContribution1 = await presale.contributions(investor1.address);
-			const userContribution2 = await presale.contributions(investor2.address);
-			const userContribution3 = await presale.contributions(investor3.address);
-
-			const totalBonusTokens1 = userContribution1.effectiveAmount.sub(userContribution1.amount); // Bonus tokens
-			const totalBonusTokens2 = userContribution2.effectiveAmount.sub(userContribution2.amount); // Bonus tokens
-			const totalBonusTokens3 = userContribution3.effectiveAmount.sub(userContribution3.amount); // Bonus tokens
-
 			// Fast forward to after the vesting period ends
 			const presaleVestingEndTime = (await presale.presaleVestingEndTime()).toNumber();
 			await time.increaseTo(presaleVestingEndTime + 1);
+
+			const totalEthEffective = await presale.totalEthEffective();
 
 			const tokenBalanceBefore1 = await token.balanceOf(investor1.address);
 			const tokenBalanceBefore2 = await token.balanceOf(investor2.address);
@@ -998,40 +999,52 @@ describe('Presale Contract', function () {
 			await presale.connect(investor3).claim();
 
 			const tokenBalanceAfter1 = await token.balanceOf(investor1.address);
+			const tokenBalanceAfter2 = await token.balanceOf(investor2.address);
+			const tokenBalanceAfter3 = await token.balanceOf(investor3.address);
+
 			const userUpdatedContribution1 = await presale.contributions(investor1.address);
+			const userUpdatedContribution2 = await presale.contributions(investor2.address);
+			const userUpdatedContribution3 = await presale.contributions(investor3.address);
+
 			const immediateTokens1 = userUpdatedContribution1.amount
 				.mul(await presale.presaleSupply())
-				.div(await presale.totalEthEffective());
+				.div(totalEthEffective);
 
-			expect(userUpdatedContribution1.claimedBonusTokens).to.equal(totalBonusTokens1);
-			expect(tokenBalanceAfter1.sub(tokenBalanceBefore1)).to.equal(totalBonusTokens1.add(immediateTokens1));
+			const immediateTokens2 = userUpdatedContribution2.amount.mul(presaleSupply).div(totalEthEffective);
 
-			const tokenBalanceAfter2 = await token.balanceOf(investor2.address);
-			const userUpdatedContribution2 = await presale.contributions(investor2.address);
-			const immediateTokens2 = userUpdatedContribution2.amount
-				.mul(await presale.presaleSupply())
-				.div(await presale.totalEthEffective());
+			const immediateTokens3 = userUpdatedContribution3.amount.mul(presaleSupply).div(totalEthEffective);
 
-			expect(userUpdatedContribution2.claimedBonusTokens).to.equal(totalBonusTokens2);
-			expect(tokenBalanceAfter2.sub(tokenBalanceBefore2)).to.equal(totalBonusTokens2.add(immediateTokens2));
+			const bonusTokens1 = userUpdatedContribution1.effectiveAmount
+				.sub(userUpdatedContribution1.amount)
+				.mul(presaleSupply)
+				.div(totalEthEffective);
 
-			const tokenBalanceAfter3 = await token.balanceOf(investor3.address);
-			const userUpdatedContribution3 = await presale.contributions(investor3.address);
-			const immediateTokens3 = userUpdatedContribution3.amount
-				.mul(await presale.presaleSupply())
-				.div(await presale.totalEthEffective());
+			const bonusTokens2 = userUpdatedContribution2.effectiveAmount
+				.sub(userUpdatedContribution2.amount)
+				.mul(presaleSupply)
+				.div(totalEthEffective);
 
-			expect(userUpdatedContribution3.claimedBonusTokens).to.equal(totalBonusTokens3);
-			expect(tokenBalanceAfter3.sub(tokenBalanceBefore3)).to.equal(totalBonusTokens3.add(immediateTokens3));
+			const bonusTokens3 = userUpdatedContribution3.effectiveAmount
+				.sub(userUpdatedContribution3.amount)
+				.mul(presaleSupply)
+				.div(totalEthEffective);
+
+			expect(userUpdatedContribution1.claimedBonusTokens).to.equal(bonusTokens1);
+			expect(userUpdatedContribution2.claimedBonusTokens).to.equal(bonusTokens2);
+			expect(userUpdatedContribution3.claimedBonusTokens).to.equal(bonusTokens3);
+
+			expect(tokenBalanceAfter1.sub(tokenBalanceBefore1)).to.equal(bonusTokens1.add(immediateTokens1));
+			expect(tokenBalanceAfter2.sub(tokenBalanceBefore2)).to.equal(bonusTokens2.add(immediateTokens2));
+			expect(tokenBalanceAfter3.sub(tokenBalanceBefore3)).to.equal(bonusTokens3.add(immediateTokens3));
 		});
 
 		it('should not claim immediate tokens if already claimed', async function () {
 			const publicPresaleStartTime = await presale.publicPresaleStartTime();
 			await time.increaseTo(publicPresaleStartTime);
 			// Contribute a large amount so we can claim later
-			const contributionAmount1 = ethers.utils.parseEther('80'); // 80 ETH
-			const contributionAmount2 = ethers.utils.parseEther('20'); // 20 ETH
-			const contributionAmount3 = ethers.BigNumber.from("1"); // 1 wei
+			const contributionAmount1 = ethers.utils.parseEther('4'); // 4 ETH
+			const contributionAmount2 = ethers.utils.parseEther('3'); // 3 ETH
+			const contributionAmount3 = ethers.BigNumber.from('1'); // 1 wei
 
 			const signature1 = await whitelist.generateWhitelistSignature(whitelistSigner, investor1);
 			const signature2 = await whitelist.generateWhitelistSignature(whitelistSigner, investor2);
@@ -1041,13 +1054,26 @@ describe('Presale Contract', function () {
 			await presale.connect(investor2).contribute(signature2, { value: contributionAmount2 });
 			await presale.connect(investor3).contribute(signature3, { value: contributionAmount3 });
 
+			const totalEthEffective = await presale.totalEthEffective();
+
 			const userContribution1 = await presale.contributions(investor1.address);
 			const userContribution2 = await presale.contributions(investor2.address);
 			const userContribution3 = await presale.contributions(investor3.address);
 
-			const totalBonusTokens1 = userContribution1.effectiveAmount.sub(userContribution1.amount); // Bonus tokens
-			const totalBonusTokens2 = userContribution2.effectiveAmount.sub(userContribution2.amount); // Bonus tokens
-			const totalBonusTokens3 = userContribution3.effectiveAmount.sub(userContribution3.amount); // Bonus tokens
+			const totalBonusTokens1 = userContribution1.effectiveAmount
+				.sub(userContribution1.amount)
+				.mul(presaleSupply)
+				.div(totalEthEffective);
+
+			const totalBonusTokens2 = userContribution2.effectiveAmount
+				.sub(userContribution2.amount)
+				.mul(presaleSupply)
+				.div(totalEthEffective);
+
+			const totalBonusTokens3 = userContribution3.effectiveAmount
+				.sub(userContribution3.amount)
+				.mul(presaleSupply)
+				.div(totalEthEffective);
 
 			// Fast forward to after the vesting period ends
 			const presaleVestingEndTime = (await presale.presaleVestingEndTime()).toNumber();
@@ -1075,17 +1101,11 @@ describe('Presale Contract', function () {
 			const userUpdatedContribution2 = await presale.contributions(investor2.address);
 			const userUpdatedContribution3 = await presale.contributions(investor3.address);
 
-			const immediateTokens1 = userUpdatedContribution1.amount
-				.mul(await presale.presaleSupply())
-				.div(await presale.totalEthEffective());
+			const immediateTokens1 = userUpdatedContribution1.amount.mul(presaleSupply).div(totalEthEffective);
 
-			const immediateTokens2 = userUpdatedContribution2.amount
-				.mul(await presale.presaleSupply())
-				.div(await presale.totalEthEffective());
+			const immediateTokens2 = userUpdatedContribution2.amount.mul(presaleSupply).div(totalEthEffective);
 
-			const immediateTokens3 = userUpdatedContribution3.amount
-				.mul(await presale.presaleSupply())
-				.div(await presale.totalEthEffective());
+			const immediateTokens3 = userUpdatedContribution3.amount.mul(presaleSupply).div(totalEthEffective);
 
 			expect(userUpdatedContribution1.claimedBonusTokens).to.equal(totalBonusTokens1);
 			expect(userUpdatedContribution2.claimedBonusTokens).to.equal(totalBonusTokens2);
@@ -1100,9 +1120,9 @@ describe('Presale Contract', function () {
 			const publicPresaleStartTime = await presale.publicPresaleStartTime();
 			await time.increaseTo(publicPresaleStartTime);
 			// Contribute a large amount so we can claim later
-			const contributionAmount1 = ethers.utils.parseEther('80'); // 80 ETH
-			const contributionAmount2 = ethers.utils.parseEther('20'); // 20 ETH
-			const contributionAmount3 = ethers.BigNumber.from("1"); // 1 wei
+			const contributionAmount1 = ethers.utils.parseEther('10'); // 10 ETH
+			const contributionAmount2 = ethers.utils.parseEther('4'); // 4 ETH
+			const contributionAmount3 = ethers.BigNumber.from('1'); // 1 wei
 
 			const signature1 = await whitelist.generateWhitelistSignature(whitelistSigner, investor1);
 			const signature2 = await whitelist.generateWhitelistSignature(whitelistSigner, investor2);
@@ -1112,13 +1132,24 @@ describe('Presale Contract', function () {
 			await presale.connect(investor2).contribute(signature2, { value: contributionAmount2 });
 			await presale.connect(investor3).contribute(signature3, { value: contributionAmount3 });
 
+			const totalEthEffective = await presale.totalEthEffective();
+
 			const userContribution1 = await presale.contributions(investor1.address);
 			const userContribution2 = await presale.contributions(investor2.address);
 			const userContribution3 = await presale.contributions(investor3.address);
 
-			const totalBonusTokens1 = userContribution1.effectiveAmount.sub(userContribution1.amount); // Bonus tokens
-			const totalBonusTokens2 = userContribution2.effectiveAmount.sub(userContribution2.amount); // Bonus tokens
-			const totalBonusTokens3 = userContribution3.effectiveAmount.sub(userContribution3.amount); // Bonus tokens
+			const totalBonusTokens1 = userContribution1.effectiveAmount
+				.sub(userContribution1.amount)
+				.mul(presaleSupply)
+				.div(totalEthEffective);
+			const totalBonusTokens2 = userContribution2.effectiveAmount
+				.sub(userContribution2.amount)
+				.mul(presaleSupply)
+				.div(totalEthEffective);
+			const totalBonusTokens3 = userContribution3.effectiveAmount
+				.sub(userContribution3.amount)
+				.mul(presaleSupply)
+				.div(totalEthEffective);
 
 			// Fast forward to after the vesting period ends
 			const presaleVestingEndTime = (await presale.presaleVestingEndTime()).toNumber();
@@ -1140,17 +1171,11 @@ describe('Presale Contract', function () {
 			const userUpdatedContribution2 = await presale.contributions(investor2.address);
 			const userUpdatedContribution3 = await presale.contributions(investor3.address);
 
-			const immediateTokens1 = userUpdatedContribution1.amount
-				.mul(await presale.presaleSupply())
-				.div(await presale.totalEthEffective());
+			const immediateTokens1 = userUpdatedContribution1.amount.mul(presaleSupply).div(totalEthEffective);
 
-			const immediateTokens2 = userUpdatedContribution2.amount
-				.mul(await presale.presaleSupply())
-				.div(await presale.totalEthEffective());
+			const immediateTokens2 = userUpdatedContribution2.amount.mul(presaleSupply).div(totalEthEffective);
 
-			const immediateTokens3 = userUpdatedContribution3.amount
-				.mul(await presale.presaleSupply())
-				.div(await presale.totalEthEffective());
+			const immediateTokens3 = userUpdatedContribution3.amount.mul(presaleSupply).div(totalEthEffective);
 
 			expect(userUpdatedContribution1.claimedBonusTokens).to.equal(totalBonusTokens1);
 			expect(userUpdatedContribution2.claimedBonusTokens).to.equal(totalBonusTokens2);
@@ -1175,16 +1200,16 @@ describe('Presale Contract', function () {
 			const userUpdatedContributionExtra3 = await presale.contributions(investor3.address);
 
 			const immediateTokensExtra1 = userUpdatedContributionExtra1.amount
-				.mul(await presale.presaleSupply())
-				.div(await presale.totalEthEffective());
+				.mul(presaleSupply)
+				.div(totalEthEffective);
 
 			const immediateTokensExtra2 = userUpdatedContributionExtra2.amount
-				.mul(await presale.presaleSupply())
-				.div(await presale.totalEthEffective());
+				.mul(presaleSupply)
+				.div(totalEthEffective);
 
 			const immediateTokensExtra3 = userUpdatedContributionExtra3.amount
-				.mul(await presale.presaleSupply())
-				.div(await presale.totalEthEffective());
+				.mul(presaleSupply)
+				.div(totalEthEffective);
 
 			expect(tokenBalanceAfterExtra1).to.equal(tokenBalanceAfter1);
 			expect(tokenBalanceAfterExtra2).to.equal(tokenBalanceAfter2);

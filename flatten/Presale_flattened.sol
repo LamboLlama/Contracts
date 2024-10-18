@@ -1657,72 +1657,95 @@ library SafeMath {
 // Original license: SPDX_License_Identifier: MIT
 pragma solidity 0.8.22;
 
+// Importing necessary OpenZeppelin contracts and libraries
 
-
-
-
-contract Presale is Ownable, ReentrancyGuard {
-    using SafeMath for uint256;
-    using SafeERC20 for IERC20;
-
-    struct Contribution {
-        uint256 amount;
-        uint256 effectiveAmount;
-        uint256 claimedBonusTokens;
-        bool claimed;
-    }
-
-    error NoValue();
-    error TransferFailed();
-    error AlreadyDeposited();
-    error InvalidWalletInput();
-    error InvalidPresaleClaimInput();
-    error InvalidPresaleInput();
-    error InvalidWhitelistInput();
-    error NotWhitelisted();
-    error ClaimPeriodNotStarted();
-    error NoContributionsToClaim();
-    error NotInContributionPeriod();
-
-    event TokensDeposited(uint256 amount);
+    /// @notice Emitted when a user makes a contribution
+    /// @param user The address of the contributor
+    /// @param amount The amount of ETH contributed
+    /// @param effectiveAmount The effective amount after applying bonuses
     event ContributionReceived(address indexed user, uint256 amount, uint256 effectiveAmount);
+
+    /// @notice Emitted when a user claims their initial tokens
+    /// @param user The address of the user
+    /// @param amount The amount of tokens claimed
     event TokensClaimed(address indexed user, uint256 amount);
+
+    /// @notice Emitted when a user claims their bonus tokens
+    /// @param user The address of the user
+    /// @param amount The amount of bonus tokens claimed
     event BonusTokensClaimed(address indexed user, uint256 amount);
 
-    uint256 public constant ONE_PERCENT = 10 ** 27;
-    uint256 public constant ONE_HUNDRED_PERCENT = 100 * ONE_PERCENT;
+    // Constants for percentage calculations
+    uint256 private constant MIN_SUPPLY = 1000 ether; // Minimum presale supply required
+    uint256 private constant ONE_PERCENT = 10 ** 27; // Represents 1% in fixed-point arithmetic
+    uint256 private constant ONE_HUNDRED_PERCENT = 100 * ONE_PERCENT; // Represents 100%
 
+    /// @notice The ERC20 token being sold
     IERC20 public immutable token;
 
+    /// @notice Indicates whether tokens have been deposited into the contract
     bool public tokensDeposited;
 
+    /// @notice Total number of tokens allocated for the presale
     uint256 public presaleSupply;
 
+    /// @notice Total actual ETH collected from contributors
     uint256 public totalEth;
+
+    /// @notice Total effective ETH after applying bonuses
     uint256 public totalEthEffective;
 
+    /// @notice Start time for the whitelist contribution period
     uint256 public whitelistStartTime;
+
+    /// @notice End time for the whitelist contribution period
     uint256 public whitelistEndTime;
 
+    /// @notice Start time for the public presale
     uint256 public publicPresaleStartTime;
+
+    /// @notice End time for the public presale
     uint256 public publicPresaleEndTime;
 
+    /// @notice Start time when token claims can begin
     uint256 public presaleClaimStartTime;
+
+    /// @notice End time for the vesting period of bonus tokens
     uint256 public presaleVestingEndTime;
 
+    /// @notice Array of bonus rates corresponding to thresholds
     uint256[] public bonusRates;
+
+    /// @notice Array of ETH thresholds for bonus rates
     uint256[] public bonusThresholds;
 
+    /// @notice Mapping of contributions by user address
     mapping(address => Contribution) public contributions;
 
-    address public whitelistSigner;
-    address payable public treasuryWallet;
+    /// @notice Address of the treasury wallet where collected ETH is sent
+    address public treasuryWallet;
 
+    /// @notice Address of the signer for whitelist verification
+    address public whitelistSigner;
+
+    /// @dev Modifier to ensure the function is called after the claim period has started
     modifier afterClaimStart() {
         if (block.timestamp <= presaleClaimStartTime) revert ClaimPeriodNotStarted();
         _;
     }
 
+    /**
+     * @notice Constructor to initialize the presale contract
+     * @param _token The ERC20 token being sold
+     * @param _presaleSupply The total number of tokens allocated for the presale
+     * @param _whitelistSigner The address of the whitelist signer
+     * @param _treasuryWallet The address of the treasury wallet to receive ETH
+     * @param _whitelistStartTime The start time for the whitelist contribution period
+     * @param _whitelistEndTime The end time for the whitelist contribution period
+     * @param _publicPresaleStartTime The start time for the public presale
+     * @param _publicPresaleEndTime The end time for the public presale
+     * @param _presaleClaimStartTime The start time when token claims can begin
+     */
     constructor(
         IERC20 _token,
         uint256 _presaleSupply,
@@ -1734,19 +1757,23 @@ contract Presale is Ownable, ReentrancyGuard {
         uint256 _publicPresaleEndTime,
         uint256 _presaleClaimStartTime
     ) {
-        if (_presaleSupply == 0 || _presaleSupply < 1000 ether) revert InvalidPresaleInput();
+        // Validate presale supply
+        if (_presaleSupply < MIN_SUPPLY) revert InvalidPresaleInput();
+        // Validate treasury wallet address
         if (_treasuryWallet == address(0)) revert InvalidWalletInput();
 
+        // Validate whitelist and presale times
         if (_whitelistEndTime < _whitelistStartTime) revert InvalidWhitelistInput();
         if (_publicPresaleStartTime < _whitelistEndTime) revert InvalidWhitelistInput();
         if (_publicPresaleEndTime < _publicPresaleStartTime) revert InvalidPresaleInput();
         if (_presaleClaimStartTime < _publicPresaleEndTime) revert InvalidPresaleClaimInput();
 
+        // Initialize state variables
         token = _token;
         publicPresaleStartTime = _publicPresaleStartTime;
         publicPresaleEndTime = _publicPresaleEndTime;
         presaleClaimStartTime = _presaleClaimStartTime;
-        presaleVestingEndTime = presaleClaimStartTime.add(30 days);
+        presaleVestingEndTime = presaleClaimStartTime.add(30 days); // Vesting ends 30 days after claim start
         whitelistStartTime = _whitelistStartTime;
         whitelistEndTime = _whitelistEndTime;
 
@@ -1757,14 +1784,17 @@ contract Presale is Ownable, ReentrancyGuard {
 
         // Initialize bonus thresholds and rates
         bonusRates = [
-            uint256(40).mul(ONE_PERCENT),
-            uint256(30).mul(ONE_PERCENT),
-            uint256(15).mul(ONE_PERCENT),
-            0
+            uint256(40).mul(ONE_PERCENT), // 40% bonus rate
+            uint256(30).mul(ONE_PERCENT), // 30% bonus rate
+            uint256(15).mul(ONE_PERCENT), // 15% bonus rate
+            0 // 0% bonus rate beyond thresholds
         ];
-        bonusThresholds = [5 ether, 10 ether, 20 ether];
+        bonusThresholds = [5 ether, 10 ether, 20 ether]; // Bonus thresholds at 5 ETH, 10 ETH, and 20 ETH
     }
 
+    /**
+     * @notice Allows the owner to deposit tokens into the contract for the presale
+     */
     function depositTokens() external onlyOwner {
         if (tokensDeposited) revert AlreadyDeposited();
         token.transferFrom(msg.sender, address(this), presaleSupply);
@@ -1772,149 +1802,194 @@ contract Presale is Ownable, ReentrancyGuard {
         emit TokensDeposited(presaleSupply);
     }
 
+    /**
+     * @notice Checks if an address is whitelisted
+     * @param signature The signature provided by the user
+     * @return bool indicating whether the user is whitelisted
+     */
     function isWhitelisted(bytes memory signature) external view returns (bool) {
+        // Recreate the signed message hash
         bytes32 messageHash = keccak256(abi.encodePacked(msg.sender));
         bytes32 ethSignedMessageHash = ECDSA.toEthSignedMessageHash(messageHash);
 
+        // Verify the signature
         return ECDSA.recover(ethSignedMessageHash, signature) == whitelistSigner;
     }
 
+    /**
+     * @notice Allows users to contribute ETH during the presale period
+     * @param signature The signature for whitelist verification during the whitelist period
+     */
     function contribute(bytes memory signature) public payable nonReentrant {
         if (msg.value == 0) {
-            revert NoValue();
+            revert NoValue(); // Ensure some ETH is sent
         }
 
+        // Check if contribution is within allowed time frames
         if (block.timestamp < whitelistStartTime || block.timestamp > publicPresaleEndTime) {
             revert NotInContributionPeriod();
         }
 
+        // If within whitelist period, verify signature
         if (block.timestamp <= whitelistEndTime) {
             if (signature.length == 0) {
                 revert NotWhitelisted();
             }
 
+            // Recreate the signed message hash
             bytes32 messageHash = keccak256(abi.encodePacked(msg.sender));
             bytes32 ethSignedMessageHash = ECDSA.toEthSignedMessageHash(messageHash);
 
+            // Verify the signature
             if (ECDSA.recover(ethSignedMessageHash, signature) != whitelistSigner) {
                 revert NotWhitelisted();
             }
         }
 
-        uint256 remainingDeposit = msg.value;
-        uint256 effectiveAmount;
+        uint256 remainingDeposit = msg.value; // Remaining ETH to process
+        uint256 effectiveAmount; // Total effective amount after bonuses
 
+        // Apply bonus for the first threshold (up to 5 ETH)
         if (totalEth < bonusThresholds[0]) {
-            uint256 thresholdAmount = bonusThresholds[0].sub(totalEth);
+            uint256 thresholdAmount = bonusThresholds[0].sub(totalEth); // Remaining amount in first threshold
             uint256 amountInThisThreshold = remainingDeposit <= thresholdAmount
                 ? remainingDeposit
-                : thresholdAmount;
+                : thresholdAmount; // Amount to process in this threshold
             uint256 bonusAmount = amountInThisThreshold.mul(bonusRates[0]).div(
                 ONE_HUNDRED_PERCENT
-            );
+            ); // Calculate bonus
 
-            effectiveAmount = effectiveAmount.add(amountInThisThreshold).add(bonusAmount);
-            remainingDeposit = remainingDeposit.sub(amountInThisThreshold);
-            totalEth = totalEth.add(amountInThisThreshold);
+            effectiveAmount = effectiveAmount.add(amountInThisThreshold).add(bonusAmount); // Update effective amount
+            remainingDeposit = remainingDeposit.sub(amountInThisThreshold); // Update remaining deposit
+            totalEth = totalEth.add(amountInThisThreshold); // Update total ETH collected
         }
 
+        // Apply bonus for the second threshold (between 5 ETH and 10 ETH)
         if (
             remainingDeposit > 0 && totalEth >= bonusThresholds[0] && totalEth < bonusThresholds[1]
         ) {
-            uint256 thresholdAmount = bonusThresholds[1].sub(totalEth);
+            uint256 thresholdAmount = bonusThresholds[1].sub(totalEth); // Remaining amount in second threshold
             uint256 amountInThisThreshold = remainingDeposit <= thresholdAmount
                 ? remainingDeposit
-                : thresholdAmount;
+                : thresholdAmount; // Amount to process in this threshold
             uint256 bonusAmount = amountInThisThreshold.mul(bonusRates[1]).div(
                 ONE_HUNDRED_PERCENT
-            );
+            ); // Calculate bonus
 
-            effectiveAmount = effectiveAmount.add(amountInThisThreshold).add(bonusAmount);
-            remainingDeposit = remainingDeposit.sub(amountInThisThreshold);
-            totalEth = totalEth.add(amountInThisThreshold);
+            effectiveAmount = effectiveAmount.add(amountInThisThreshold).add(bonusAmount); // Update effective amount
+            remainingDeposit = remainingDeposit.sub(amountInThisThreshold); // Update remaining deposit
+            totalEth = totalEth.add(amountInThisThreshold); // Update total ETH collected
         }
 
+        // Apply bonus for the third threshold (between 10 ETH and 20 ETH)
         if (
             remainingDeposit > 0 && totalEth >= bonusThresholds[1] && totalEth < bonusThresholds[2]
         ) {
-            uint256 thresholdAmount = bonusThresholds[2].sub(totalEth);
+            uint256 thresholdAmount = bonusThresholds[2].sub(totalEth); // Remaining amount in third threshold
             uint256 amountInThisThreshold = remainingDeposit <= thresholdAmount
                 ? remainingDeposit
-                : thresholdAmount;
+                : thresholdAmount; // Amount to process in this threshold
             uint256 bonusAmount = amountInThisThreshold.mul(bonusRates[2]).div(
                 ONE_HUNDRED_PERCENT
-            );
-            effectiveAmount = effectiveAmount.add(amountInThisThreshold).add(bonusAmount);
-            remainingDeposit = remainingDeposit.sub(amountInThisThreshold);
-            totalEth = totalEth.add(amountInThisThreshold);
+            ); // Calculate bonus
+
+            effectiveAmount = effectiveAmount.add(amountInThisThreshold).add(bonusAmount); // Update effective amount
+            remainingDeposit = remainingDeposit.sub(amountInThisThreshold); // Update remaining deposit
+            totalEth = totalEth.add(amountInThisThreshold); // Update total ETH collected
         }
 
+        // Any remaining deposit beyond thresholds gets no bonus
         if (remainingDeposit > 0) {
-            effectiveAmount = effectiveAmount.add(remainingDeposit);
-            totalEth = totalEth.add(remainingDeposit);
+            effectiveAmount = effectiveAmount.add(remainingDeposit); // Add remaining deposit to effective amount
+            totalEth = totalEth.add(remainingDeposit); // Update total ETH collected
         }
 
-        totalEthEffective = totalEthEffective.add(effectiveAmount);
+        totalEthEffective = totalEthEffective.add(effectiveAmount); // Update total effective ETH
 
+        // Update user's contribution
         Contribution storage userContribution = contributions[msg.sender];
-        userContribution.amount = userContribution.amount.add(msg.value);
-        userContribution.effectiveAmount = userContribution.effectiveAmount.add(effectiveAmount);
+        userContribution.amount = userContribution.amount.add(msg.value); // Update actual amount contributed
+        userContribution.effectiveAmount = userContribution.effectiveAmount.add(effectiveAmount); // Update effective amount
 
+        // Transfer the contributed ETH to the treasury wallet
         (bool success, ) = treasuryWallet.call{value: msg.value}("");
-
         if (!success) {
-            revert TransferFailed();
+            revert TransferFailed(); // Revert if transfer fails
         }
 
-        emit ContributionReceived(msg.sender, msg.value, effectiveAmount);
+        emit ContributionReceived(msg.sender, msg.value, effectiveAmount); // Emit event
     }
 
+    /**
+     * @notice Allows users to claim their tokens after the claim period has started
+     */
     function claim() external afterClaimStart nonReentrant {
         Contribution storage userContribution = contributions[msg.sender];
         if (userContribution.amount == 0 && userContribution.effectiveAmount == 0)
-            revert NoContributionsToClaim();
+            revert NoContributionsToClaim(); // Ensure the user has contributions to claim
 
+        // Claim initial tokens if not already claimed
         if (!userContribution.claimed) {
-            uint256 immediateTokens = userContribution.amount.mul(presaleSupply).div(
+            // Calculate the amount of tokens to distribute immediately
+            uint256 userAmountTokens = userContribution.amount.mul(presaleSupply).div(
                 totalEthEffective
             );
 
-            userContribution.claimed = true;
+            userContribution.claimed = true; // Mark as claimed
 
-            token.transfer(msg.sender, immediateTokens);
+            token.transfer(msg.sender, userAmountTokens); // Transfer tokens to the user
 
-            emit TokensClaimed(msg.sender, immediateTokens);
+            emit TokensClaimed(msg.sender, userAmountTokens); // Emit event
         }
 
-        uint256 bonusTokens = userContribution.effectiveAmount.sub(userContribution.amount);
-        if (bonusTokens > 0) {
-            uint256 vestedAmount = _vestedBonusTokens(bonusTokens);
-            uint256 claimableAmount = vestedAmount.sub(userContribution.claimedBonusTokens);
+        // Calculate bonus tokens
+        uint256 bonusAmountEth = userContribution.effectiveAmount.sub(userContribution.amount);
 
-            if (claimableAmount > 0) {
+        if (bonusAmountEth > 0) {
+            // Calculate vested bonus tokens
+            uint256 vestedTokens = _vestedBonusTokens(bonusAmountEth);
+            // Calculate claimable amount (vested amount minus already claimed)
+            uint256 claimableTokens = vestedTokens.sub(userContribution.claimedBonusTokens);
+
+            if (claimableTokens > 0) {
+                // Update user's claimed bonus tokens
                 userContribution.claimedBonusTokens = userContribution.claimedBonusTokens.add(
-                    claimableAmount
+                    claimableTokens
                 );
 
-                token.transfer(msg.sender, claimableAmount);
+                token.transfer(msg.sender, claimableTokens); // Transfer bonus tokens to the user
 
-                emit BonusTokensClaimed(msg.sender, claimableAmount);
+                emit BonusTokensClaimed(msg.sender, claimableTokens); // Emit event
             }
         }
     }
 
-    function _vestedBonusTokens(uint256 bonusTokens) internal view returns (uint256) {
+    /**
+     * @dev Internal function to calculate the number of vested bonus tokens for a user
+     * @param bonusAmountEth The bonus ETH amount contributed by the user
+     * @return The amount of bonus tokens that have vested
+     */
+    function _vestedBonusTokens(uint256 bonusAmountEth) internal view returns (uint256) {
         if (block.timestamp >= presaleVestingEndTime) {
-            return bonusTokens;
+            // All bonus tokens have vested
+            return bonusAmountEth.mul(presaleSupply).div(totalEthEffective);
         } else {
-            uint256 vestingDuration = presaleVestingEndTime.sub(presaleClaimStartTime);
-            uint256 timeElapsed = block.timestamp.sub(presaleClaimStartTime);
+            uint256 vestingDuration = presaleVestingEndTime.sub(presaleClaimStartTime); // Total vesting duration
+            uint256 timeElapsed = block.timestamp.sub(presaleClaimStartTime); // Time elapsed since claim start
 
-            return bonusTokens.mul(timeElapsed).div(vestingDuration);
+            // Calculate vested amount proportionally
+            return
+                bonusAmountEth.mul(timeElapsed).div(vestingDuration).mul(presaleSupply).div(
+                    totalEthEffective
+                );
         }
     }
 
+    /**
+     * @notice Fallback function to receive ETH contributions
+     * Users can send ETH directly to the contract address to participate in the presale
+     */
     receive() external payable {
-        contribute("");
+        contribute(""); // Calls the contribute function without a signature (for public presale)
     }
 }

@@ -3,8 +3,7 @@ pragma solidity 0.8.22;
 
 // Importing necessary OpenZeppelin contracts and libraries
 import {ECDSA} from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol"; // For signature verification
-import {SafeMath} from "@openzeppelin/contracts/utils/math/SafeMath.sol"; // For safe arithmetic operations
-import {IERC20, SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol"; // ERC20 interface and safe operations
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol"; // ERC20 interface
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol"; // Provides basic access control
 import {ReentrancyGuard} from "@openzeppelin/contracts/security/ReentrancyGuard.sol"; // Protects against reentrancy attacks
 
@@ -15,9 +14,6 @@ import {ReentrancyGuard} from "@openzeppelin/contracts/security/ReentrancyGuard.
  * The contract supports a whitelist for early contributions and applies bonuses based on contribution thresholds.
  */
 contract Presale is Ownable, ReentrancyGuard {
-    using SafeMath for uint256; // Using SafeMath for uint256 to prevent overflows/underflows
-    using SafeERC20 for IERC20; // Using SafeERC20 for IERC20 token transfers
-
     /// @dev Structure to store each contributor's information
     struct Contribution {
         uint256 amount; // Actual ETH invested by the user
@@ -69,7 +65,7 @@ contract Presale is Ownable, ReentrancyGuard {
     uint256 private constant ONE_HUNDRED_PERCENT = 100 * ONE_PERCENT; // Represents 100%
 
     /// @notice The ERC20 token being sold
-    IERC20 public immutable token;
+    IERC20 public token;
 
     /// @notice Indicates whether tokens have been deposited into the contract
     bool public tokensDeposited;
@@ -161,7 +157,7 @@ contract Presale is Ownable, ReentrancyGuard {
         publicPresaleStartTime = _publicPresaleStartTime;
         publicPresaleEndTime = _publicPresaleEndTime;
         presaleClaimStartTime = _presaleClaimStartTime;
-        presaleVestingEndTime = presaleClaimStartTime.add(30 days); // Vesting ends 30 days after claim start
+        presaleVestingEndTime = presaleClaimStartTime + 30 days; // Vesting ends 30 days after claim start
         whitelistStartTime = _whitelistStartTime;
         whitelistEndTime = _whitelistEndTime;
 
@@ -172,9 +168,9 @@ contract Presale is Ownable, ReentrancyGuard {
 
         // Initialize bonus thresholds and rates
         bonusRates = [
-            uint256(40).mul(ONE_PERCENT), // 40% bonus rate
-            uint256(30).mul(ONE_PERCENT), // 30% bonus rate
-            uint256(15).mul(ONE_PERCENT), // 15% bonus rate
+            uint256(40) * ONE_PERCENT, // 40% bonus rate
+            uint256(30) * ONE_PERCENT, // 30% bonus rate
+            uint256(15) * ONE_PERCENT, // 15% bonus rate
             0 // 0% bonus rate beyond thresholds
         ];
         bonusThresholds = [5 ether, 10 ether, 20 ether]; // Bonus thresholds at 5 ETH, 10 ETH, and 20 ETH
@@ -239,65 +235,59 @@ contract Presale is Ownable, ReentrancyGuard {
 
         // Apply bonus for the first threshold (up to 5 ETH)
         if (totalEth < bonusThresholds[0]) {
-            uint256 thresholdAmount = bonusThresholds[0].sub(totalEth); // Remaining amount in first threshold
+            uint256 thresholdAmount = bonusThresholds[0] - totalEth; // Remaining amount in first threshold
             uint256 amountInThisThreshold = remainingDeposit <= thresholdAmount
                 ? remainingDeposit
                 : thresholdAmount; // Amount to process in this threshold
-            uint256 bonusAmount = amountInThisThreshold.mul(bonusRates[0]).div(
-                ONE_HUNDRED_PERCENT
-            ); // Calculate bonus
+            uint256 bonusAmount = (amountInThisThreshold * bonusRates[0]) / ONE_HUNDRED_PERCENT; // Calculate bonus
 
-            effectiveAmount = effectiveAmount.add(amountInThisThreshold).add(bonusAmount); // Update effective amount
-            remainingDeposit = remainingDeposit.sub(amountInThisThreshold); // Update remaining deposit
-            totalEth = totalEth.add(amountInThisThreshold); // Update total ETH collected
+            effectiveAmount = effectiveAmount + amountInThisThreshold + bonusAmount; // Update effective amount
+            remainingDeposit = remainingDeposit - amountInThisThreshold; // Update remaining deposit
+            totalEth = totalEth + amountInThisThreshold; // Update total ETH collected
         }
 
         // Apply bonus for the second threshold (between 5 ETH and 10 ETH)
         if (
             remainingDeposit > 0 && totalEth >= bonusThresholds[0] && totalEth < bonusThresholds[1]
         ) {
-            uint256 thresholdAmount = bonusThresholds[1].sub(totalEth); // Remaining amount in second threshold
+            uint256 thresholdAmount = bonusThresholds[1] - totalEth; // Remaining amount in second threshold
             uint256 amountInThisThreshold = remainingDeposit <= thresholdAmount
                 ? remainingDeposit
                 : thresholdAmount; // Amount to process in this threshold
-            uint256 bonusAmount = amountInThisThreshold.mul(bonusRates[1]).div(
-                ONE_HUNDRED_PERCENT
-            ); // Calculate bonus
+            uint256 bonusAmount = (amountInThisThreshold * bonusRates[1]) / ONE_HUNDRED_PERCENT; // Calculate bonus
 
-            effectiveAmount = effectiveAmount.add(amountInThisThreshold).add(bonusAmount); // Update effective amount
-            remainingDeposit = remainingDeposit.sub(amountInThisThreshold); // Update remaining deposit
-            totalEth = totalEth.add(amountInThisThreshold); // Update total ETH collected
+            effectiveAmount = effectiveAmount + amountInThisThreshold + bonusAmount; // Update effective amount
+            remainingDeposit = remainingDeposit - amountInThisThreshold; // Update remaining deposit
+            totalEth = totalEth + amountInThisThreshold; // Update total ETH collected
         }
 
         // Apply bonus for the third threshold (between 10 ETH and 20 ETH)
         if (
             remainingDeposit > 0 && totalEth >= bonusThresholds[1] && totalEth < bonusThresholds[2]
         ) {
-            uint256 thresholdAmount = bonusThresholds[2].sub(totalEth); // Remaining amount in third threshold
+            uint256 thresholdAmount = bonusThresholds[2] - totalEth; // Remaining amount in third threshold
             uint256 amountInThisThreshold = remainingDeposit <= thresholdAmount
                 ? remainingDeposit
                 : thresholdAmount; // Amount to process in this threshold
-            uint256 bonusAmount = amountInThisThreshold.mul(bonusRates[2]).div(
-                ONE_HUNDRED_PERCENT
-            ); // Calculate bonus
+            uint256 bonusAmount = (amountInThisThreshold * bonusRates[2]) / ONE_HUNDRED_PERCENT; // Calculate bonus
 
-            effectiveAmount = effectiveAmount.add(amountInThisThreshold).add(bonusAmount); // Update effective amount
-            remainingDeposit = remainingDeposit.sub(amountInThisThreshold); // Update remaining deposit
-            totalEth = totalEth.add(amountInThisThreshold); // Update total ETH collected
+            effectiveAmount = effectiveAmount + amountInThisThreshold + bonusAmount; // Update effective amount
+            remainingDeposit = remainingDeposit - amountInThisThreshold; // Update remaining deposit
+            totalEth = totalEth + amountInThisThreshold; // Update total ETH collected
         }
 
         // Any remaining deposit beyond thresholds gets no bonus
         if (remainingDeposit > 0) {
-            effectiveAmount = effectiveAmount.add(remainingDeposit); // Add remaining deposit to effective amount
-            totalEth = totalEth.add(remainingDeposit); // Update total ETH collected
+            effectiveAmount = effectiveAmount + remainingDeposit; // Add remaining deposit to effective amount
+            totalEth = totalEth + remainingDeposit; // Update total ETH collected
         }
 
-        totalEthEffective = totalEthEffective.add(effectiveAmount); // Update total effective ETH
+        totalEthEffective = totalEthEffective + effectiveAmount; // Update total effective ETH
 
         // Update user's contribution
         Contribution storage userContribution = contributions[msg.sender];
-        userContribution.amount = userContribution.amount.add(msg.value); // Update actual amount contributed
-        userContribution.effectiveAmount = userContribution.effectiveAmount.add(effectiveAmount); // Update effective amount
+        userContribution.amount = userContribution.amount + msg.value; // Update actual amount contributed
+        userContribution.effectiveAmount = userContribution.effectiveAmount + effectiveAmount; // Update effective amount
 
         // Transfer the contributed ETH to the treasury wallet
         (bool success, ) = treasuryWallet.call{value: msg.value}("");
@@ -319,9 +309,8 @@ contract Presale is Ownable, ReentrancyGuard {
         // Claim initial tokens if not already claimed
         if (!userContribution.claimed) {
             // Calculate the amount of tokens to distribute immediately
-            uint256 userAmountTokens = userContribution.amount.mul(presaleSupply).div(
-                totalEthEffective
-            );
+            uint256 userAmountTokens = (userContribution.amount * presaleSupply) /
+                totalEthEffective;
 
             userContribution.claimed = true; // Mark as claimed
 
@@ -331,19 +320,19 @@ contract Presale is Ownable, ReentrancyGuard {
         }
 
         // Calculate bonus tokens
-        uint256 bonusAmountEth = userContribution.effectiveAmount.sub(userContribution.amount);
+        uint256 bonusAmountEth = userContribution.effectiveAmount - userContribution.amount;
 
         if (bonusAmountEth > 0) {
             // Calculate vested bonus tokens
             uint256 vestedTokens = _vestedBonusTokens(bonusAmountEth);
             // Calculate claimable amount (vested amount minus already claimed)
-            uint256 claimableTokens = vestedTokens.sub(userContribution.claimedBonusTokens);
+            uint256 claimableTokens = vestedTokens - userContribution.claimedBonusTokens;
 
             if (claimableTokens > 0) {
                 // Update user's claimed bonus tokens
-                userContribution.claimedBonusTokens = userContribution.claimedBonusTokens.add(
-                    claimableTokens
-                );
+                userContribution.claimedBonusTokens =
+                    userContribution.claimedBonusTokens +
+                    claimableTokens;
 
                 token.transfer(msg.sender, claimableTokens); // Transfer bonus tokens to the user
 
@@ -360,16 +349,15 @@ contract Presale is Ownable, ReentrancyGuard {
     function _vestedBonusTokens(uint256 bonusAmountEth) internal view returns (uint256) {
         if (block.timestamp >= presaleVestingEndTime) {
             // All bonus tokens have vested
-            return bonusAmountEth.mul(presaleSupply).div(totalEthEffective);
+            return (bonusAmountEth * presaleSupply) / totalEthEffective;
         } else {
-            uint256 vestingDuration = presaleVestingEndTime.sub(presaleClaimStartTime); // Total vesting duration
-            uint256 timeElapsed = block.timestamp.sub(presaleClaimStartTime); // Time elapsed since claim start
+            uint256 vestingDuration = presaleVestingEndTime - presaleClaimStartTime; // Total vesting duration
+            uint256 timeElapsed = block.timestamp - presaleClaimStartTime; // Time elapsed since claim start
 
             // Calculate vested amount proportionally
             return
-                bonusAmountEth.mul(timeElapsed).div(vestingDuration).mul(presaleSupply).div(
-                    totalEthEffective
-                );
+                (((bonusAmountEth * timeElapsed) / vestingDuration) * presaleSupply) /
+                totalEthEffective;
         }
     }
 

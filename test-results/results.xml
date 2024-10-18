@@ -1,83 +1,83 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuites name="Mocha Tests" time="3.683" tests="96" failures="0">
-  <testsuite name="Root Suite" timestamp="2024-10-18T07:48:07" tests="0" time="0.000" failures="0">
+<testsuites name="Mocha Tests" time="3.652" tests="96" failures="0">
+  <testsuite name="Root Suite" timestamp="2024-10-18T08:34:14" tests="0" time="0.000" failures="0">
   </testsuite>
-  <testsuite name="Airdrop" timestamp="2024-10-18T07:48:07" tests="0" file="/Users/Mac/Projects/Nodejs/LamboLlama/Contracts/test/airdrop.ts" time="0.000" failures="0">
+  <testsuite name="Airdrop" timestamp="2024-10-18T08:34:14" tests="0" file="/Users/Mac/Projects/Nodejs/LamboLlama/Contracts/test/airdrop.ts" time="0.000" failures="0">
   </testsuite>
-  <testsuite name="Deployment" timestamp="2024-10-18T07:48:07" tests="7" file="/Users/Mac/Projects/Nodejs/LamboLlama/Contracts/test/airdrop.ts" time="0.049" failures="0">
+  <testsuite name="Deployment" timestamp="2024-10-18T08:34:14" tests="7" file="/Users/Mac/Projects/Nodejs/LamboLlama/Contracts/test/airdrop.ts" time="0.053" failures="0">
     <testcase name="Airdrop Deployment Should set the correct token address" time="0.004" classname="Should set the correct token address">
     </testcase>
-    <testcase name="Airdrop Deployment Should set the correct owner" time="0.002" classname="Should set the correct owner">
+    <testcase name="Airdrop Deployment Should set the correct owner" time="0.004" classname="Should set the correct owner">
     </testcase>
     <testcase name="Airdrop Deployment Should set the correct claim period" time="0.004" classname="Should set the correct claim period">
     </testcase>
-    <testcase name="Airdrop Deployment Should not allow zero address for token" time="0.011" classname="Should not allow zero address for token">
+    <testcase name="Airdrop Deployment Should not allow zero address for token" time="0.010" classname="Should not allow zero address for token">
     </testcase>
-    <testcase name="Airdrop Deployment Should not allow zero address for owner" time="0.008" classname="Should not allow zero address for owner">
+    <testcase name="Airdrop Deployment Should not allow zero address for owner" time="0.009" classname="Should not allow zero address for owner">
     </testcase>
     <testcase name="Airdrop Deployment Should not allow past start date" time="0.009" classname="Should not allow past start date">
     </testcase>
-    <testcase name="Airdrop Deployment Should not allow end date before start date" time="0.007" classname="Should not allow end date before start date">
+    <testcase name="Airdrop Deployment Should not allow end date before start date" time="0.009" classname="Should not allow end date before start date">
     </testcase>
   </testsuite>
-  <testsuite name="Set Recipients" timestamp="2024-10-18T07:48:07" tests="4" file="/Users/Mac/Projects/Nodejs/LamboLlama/Contracts/test/airdrop.ts" time="0.024" failures="0">
-    <testcase name="Airdrop Set Recipients Should allow owner to set recipients" time="0.010" classname="Should allow owner to set recipients">
+  <testsuite name="Set Recipients" timestamp="2024-10-18T08:34:14" tests="4" file="/Users/Mac/Projects/Nodejs/LamboLlama/Contracts/test/airdrop.ts" time="0.024" failures="0">
+    <testcase name="Airdrop Set Recipients Should allow owner to set recipients" time="0.009" classname="Should allow owner to set recipients">
     </testcase>
-    <testcase name="Airdrop Set Recipients Should not allow non-owner to set recipients" time="0.005" classname="Should not allow non-owner to set recipients">
+    <testcase name="Airdrop Set Recipients Should not allow non-owner to set recipients" time="0.006" classname="Should not allow non-owner to set recipients">
     </testcase>
     <testcase name="Airdrop Set Recipients Should not allow setting recipients with different array lengths" time="0.002" classname="Should not allow setting recipients with different array lengths">
     </testcase>
     <testcase name="Airdrop Set Recipients Should not allow setting a recipient more than once" time="0.006" classname="Should not allow setting a recipient more than once">
     </testcase>
   </testsuite>
-  <testsuite name="Claim with vesting" timestamp="2024-10-18T07:48:07" tests="6" file="/Users/Mac/Projects/Nodejs/LamboLlama/Contracts/test/airdrop.ts" time="0.081" failures="0">
-    <testcase name="Airdrop Claim with vesting Should allow recipients to claim vested tokens after start period" time="0.013" classname="Should allow recipients to claim vested tokens after start period">
+  <testsuite name="Claim with vesting" timestamp="2024-10-18T08:34:14" tests="6" file="/Users/Mac/Projects/Nodejs/LamboLlama/Contracts/test/airdrop.ts" time="0.080" failures="0">
+    <testcase name="Airdrop Claim with vesting Should allow recipients to claim vested tokens after start period" time="0.014" classname="Should allow recipients to claim vested tokens after start period">
     </testcase>
     <testcase name="Airdrop Claim with vesting Should not allow recipients to claim tokens before start period" time="0.003" classname="Should not allow recipients to claim tokens before start period">
     </testcase>
-    <testcase name="Airdrop Claim with vesting Should not allow recipients to claim more than the vested amount" time="0.014" classname="Should not allow recipients to claim more than the vested amount">
+    <testcase name="Airdrop Claim with vesting Should not allow recipients to claim more than the vested amount" time="0.012" classname="Should not allow recipients to claim more than the vested amount">
     </testcase>
-    <testcase name="Airdrop Claim with vesting Should allow recipients to claim fully vested tokens at end of vesting period" time="0.010" classname="Should allow recipients to claim fully vested tokens at end of vesting period">
+    <testcase name="Airdrop Claim with vesting Should allow recipients to claim fully vested tokens at end of vesting period" time="0.009" classname="Should allow recipients to claim fully vested tokens at end of vesting period">
     </testcase>
-    <testcase name="Airdrop Claim with vesting Should not allow recipients to claim tokens after end period" time="0.004" classname="Should not allow recipients to claim tokens after end period">
+    <testcase name="Airdrop Claim with vesting Should not allow recipients to claim tokens after end period" time="0.003" classname="Should not allow recipients to claim tokens after end period">
     </testcase>
     <testcase name="Airdrop Claim with vesting Should not allow recipients to claim tokens if they have none" time="0.003" classname="Should not allow recipients to claim tokens if they have none">
     </testcase>
   </testsuite>
-  <testsuite name="Withdraw" timestamp="2024-10-18T07:48:07" tests="2" file="/Users/Mac/Projects/Nodejs/LamboLlama/Contracts/test/airdrop.ts" time="0.011" failures="0">
-    <testcase name="Airdrop Withdraw Should allow owner to withdraw tokens" time="0.008" classname="Should allow owner to withdraw tokens">
+  <testsuite name="Withdraw" timestamp="2024-10-18T08:34:14" tests="2" file="/Users/Mac/Projects/Nodejs/LamboLlama/Contracts/test/airdrop.ts" time="0.009" failures="0">
+    <testcase name="Airdrop Withdraw Should allow owner to withdraw tokens" time="0.006" classname="Should allow owner to withdraw tokens">
     </testcase>
     <testcase name="Airdrop Withdraw Should not allow non-owner to withdraw tokens" time="0.003" classname="Should not allow non-owner to withdraw tokens">
     </testcase>
   </testsuite>
-  <testsuite name="LamboLlama" timestamp="2024-10-18T07:48:07" tests="0" file="/Users/Mac/Projects/Nodejs/LamboLlama/Contracts/test/lambollama.ts" time="0.000" failures="0">
+  <testsuite name="LamboLlama" timestamp="2024-10-18T08:34:14" tests="0" file="/Users/Mac/Projects/Nodejs/LamboLlama/Contracts/test/lambollama.ts" time="0.000" failures="0">
   </testsuite>
-  <testsuite name="Token" timestamp="2024-10-18T07:48:07" tests="5" file="/Users/Mac/Projects/Nodejs/LamboLlama/Contracts/test/lambollama.ts" time="0.053" failures="0">
-    <testcase name="LamboLlama Token check delegate address as owner" time="0.006" classname="check delegate address as owner">
+  <testsuite name="Token" timestamp="2024-10-18T08:34:14" tests="5" file="/Users/Mac/Projects/Nodejs/LamboLlama/Contracts/test/lambollama.ts" time="0.052" failures="0">
+    <testcase name="LamboLlama Token check delegate address as owner" time="0.004" classname="check delegate address as owner">
     </testcase>
     <testcase name="LamboLlama Token should transfer ownership" time="0.007" classname="should transfer ownership">
     </testcase>
     <testcase name="LamboLlama Token should mint tokens if _mintSupply is true" time="0.002" classname="should mint tokens if _mintSupply is true">
     </testcase>
-    <testcase name="LamboLlama Token should not mint tokens if _mintSupply is false" time="0.027" classname="should not mint tokens if _mintSupply is false">
+    <testcase name="LamboLlama Token should not mint tokens if _mintSupply is false" time="0.029" classname="should not mint tokens if _mintSupply is false">
     </testcase>
     <testcase name="LamboLlama Token should transfer tokens between accounts" time="0.009" classname="should transfer tokens between accounts">
     </testcase>
   </testsuite>
-  <testsuite name="ERC20Permit" timestamp="2024-10-18T07:48:07" tests="1" file="/Users/Mac/Projects/Nodejs/LamboLlama/Contracts/test/lambollama.ts" time="0.051" failures="0">
-    <testcase name="LamboLlama ERC20Permit should allow USER to approve via permit and transfer tokens" time="0.049" classname="should allow USER to approve via permit and transfer tokens">
+  <testsuite name="ERC20Permit" timestamp="2024-10-18T08:34:14" tests="1" file="/Users/Mac/Projects/Nodejs/LamboLlama/Contracts/test/lambollama.ts" time="0.029" failures="0">
+    <testcase name="LamboLlama ERC20Permit should allow USER to approve via permit and transfer tokens" time="0.029" classname="should allow USER to approve via permit and transfer tokens">
     </testcase>
   </testsuite>
-  <testsuite name="Presale Contract" timestamp="2024-10-18T07:48:08" tests="0" file="/Users/Mac/Projects/Nodejs/LamboLlama/Contracts/test/presale.ts" time="0.000" failures="0">
+  <testsuite name="Presale Contract" timestamp="2024-10-18T08:34:14" tests="0" file="/Users/Mac/Projects/Nodejs/LamboLlama/Contracts/test/presale.ts" time="0.000" failures="0">
   </testsuite>
-  <testsuite name="Contract Deployment" timestamp="2024-10-18T07:48:08" tests="1" file="/Users/Mac/Projects/Nodejs/LamboLlama/Contracts/test/presale.ts" time="0.000" failures="0">
-    <testcase name="Presale Contract Contract Deployment should deploy the contract with correct parameters" time="0.016" classname="should deploy the contract with correct parameters">
+  <testsuite name="Contract Deployment" timestamp="2024-10-18T08:34:14" tests="1" file="/Users/Mac/Projects/Nodejs/LamboLlama/Contracts/test/presale.ts" time="0.000" failures="0">
+    <testcase name="Presale Contract Contract Deployment should deploy the contract with correct parameters" time="0.017" classname="should deploy the contract with correct parameters">
     </testcase>
   </testsuite>
-  <testsuite name="Presale Constructor Checks" timestamp="2024-10-18T07:48:08" tests="6" file="/Users/Mac/Projects/Nodejs/LamboLlama/Contracts/test/presale.ts" time="0.262" failures="0">
-    <testcase name="Presale Contract Contract Deployment Presale Constructor Checks should revert if whitelist end time is before or equal to whitelist start time" time="0.008" classname="should revert if whitelist end time is before or equal to whitelist start time">
+  <testsuite name="Presale Constructor Checks" timestamp="2024-10-18T08:34:15" tests="6" file="/Users/Mac/Projects/Nodejs/LamboLlama/Contracts/test/presale.ts" time="0.258" failures="0">
+    <testcase name="Presale Contract Contract Deployment Presale Constructor Checks should revert if whitelist end time is before or equal to whitelist start time" time="0.006" classname="should revert if whitelist end time is before or equal to whitelist start time">
     </testcase>
-    <testcase name="Presale Contract Contract Deployment Presale Constructor Checks should revert if funding start time is before or equal to whitelist end time" time="0.007" classname="should revert if funding start time is before or equal to whitelist end time">
+    <testcase name="Presale Contract Contract Deployment Presale Constructor Checks should revert if funding start time is before or equal to whitelist end time" time="0.006" classname="should revert if funding start time is before or equal to whitelist end time">
     </testcase>
     <testcase name="Presale Contract Contract Deployment Presale Constructor Checks should revert if funding end time is before or equal to funding start time" time="0.007" classname="should revert if funding end time is before or equal to funding start time">
     </testcase>
@@ -85,52 +85,52 @@
     </testcase>
     <testcase name="Presale Contract Contract Deployment Presale Constructor Checks should revert if total tokens for sale is less then 1000 eth" time="0.006" classname="should revert if total tokens for sale is less then 1000 eth">
     </testcase>
-    <testcase name="Presale Contract Contract Deployment Presale Constructor Checks should revert if funds wallet address is zero address" time="0.006" classname="should revert if funds wallet address is zero address">
+    <testcase name="Presale Contract Contract Deployment Presale Constructor Checks should revert if funds wallet address is zero address" time="0.005" classname="should revert if funds wallet address is zero address">
     </testcase>
   </testsuite>
-  <testsuite name="Whitelisting Check" timestamp="2024-10-18T07:48:08" tests="1" file="/Users/Mac/Projects/Nodejs/LamboLlama/Contracts/test/presale.ts" time="0.049" failures="0">
+  <testsuite name="Whitelisting Check" timestamp="2024-10-18T08:34:15" tests="1" file="/Users/Mac/Projects/Nodejs/LamboLlama/Contracts/test/presale.ts" time="0.046" failures="0">
     <testcase name="Presale Contract Whitelisting Check should verify if an address is whitelisted using signature" time="0.009" classname="should verify if an address is whitelisted using signature">
     </testcase>
   </testsuite>
-  <testsuite name="Token Deposit" timestamp="2024-10-18T07:48:08" tests="3" file="/Users/Mac/Projects/Nodejs/LamboLlama/Contracts/test/presale.ts" time="0.119" failures="0">
+  <testsuite name="Token Deposit" timestamp="2024-10-18T08:34:15" tests="3" file="/Users/Mac/Projects/Nodejs/LamboLlama/Contracts/test/presale.ts" time="0.116" failures="0">
     <testcase name="Presale Contract Token Deposit should allow the owner to deposit tokens" time="0.004" classname="should allow the owner to deposit tokens">
     </testcase>
     <testcase name="Presale Contract Token Deposit should not allow non-owners to deposit tokens" time="0.003" classname="should not allow non-owners to deposit tokens">
     </testcase>
-    <testcase name="Presale Contract Token Deposit should not allow tokens to be deposited more than once" time="0.003" classname="should not allow tokens to be deposited more than once">
+    <testcase name="Presale Contract Token Deposit should not allow tokens to be deposited more than once" time="0.004" classname="should not allow tokens to be deposited more than once">
     </testcase>
   </testsuite>
-  <testsuite name="Contributions" timestamp="2024-10-18T07:48:08" tests="6" file="/Users/Mac/Projects/Nodejs/LamboLlama/Contracts/test/presale.ts" time="0.293" failures="0">
+  <testsuite name="Contributions" timestamp="2024-10-18T08:34:15" tests="6" file="/Users/Mac/Projects/Nodejs/LamboLlama/Contracts/test/presale.ts" time="0.291" failures="0">
     <testcase name="Presale Contract Contributions should reject contributions before contribution period" time="0.006" classname="should reject contributions before contribution period">
     </testcase>
-    <testcase name="Presale Contract Contributions should reject contributions after contribution period" time="0.005" classname="should reject contributions after contribution period">
+    <testcase name="Presale Contract Contributions should reject contributions after contribution period" time="0.006" classname="should reject contributions after contribution period">
     </testcase>
-    <testcase name="Presale Contract Contributions should accept contributions during funding period" time="0.014" classname="should accept contributions during funding period">
+    <testcase name="Presale Contract Contributions should accept contributions during funding period" time="0.013" classname="should accept contributions during funding period">
     </testcase>
-    <testcase name="Presale Contract Contributions should reject zero contributions" time="0.004" classname="should reject zero contributions">
+    <testcase name="Presale Contract Contributions should reject contributions that are less than the minimum contribution of 0.0002 eth" time="0.003" classname="should reject contributions that are less than the minimum contribution of 0.0002 eth">
     </testcase>
     <testcase name="Presale Contract Contributions should handle multiple contributions from the same investor" time="0.015" classname="should handle multiple contributions from the same investor">
     </testcase>
-    <testcase name="Presale Contract Contributions should revert with TransferFailed when treasuryWallet rejects Ether" time="0.034" classname="should revert with TransferFailed when treasuryWallet rejects Ether">
+    <testcase name="Presale Contract Contributions should revert with TransferFailed when treasuryWallet rejects Ether" time="0.035" classname="should revert with TransferFailed when treasuryWallet rejects Ether">
     </testcase>
   </testsuite>
-  <testsuite name="Contributions with Bonuses" timestamp="2024-10-18T07:48:08" tests="7" file="/Users/Mac/Projects/Nodejs/LamboLlama/Contracts/test/presale.ts" time="0.412" failures="0">
-    <testcase name="Presale Contract Contributions with Bonuses should correctly calculate effective amount with bonus within first threshold" time="0.013" classname="should correctly calculate effective amount with bonus within first threshold">
+  <testsuite name="Contributions with Bonuses" timestamp="2024-10-18T08:34:15" tests="7" file="/Users/Mac/Projects/Nodejs/LamboLlama/Contracts/test/presale.ts" time="0.407" failures="0">
+    <testcase name="Presale Contract Contributions with Bonuses should correctly calculate effective amount with bonus within first threshold" time="0.014" classname="should correctly calculate effective amount with bonus within first threshold">
     </testcase>
     <testcase name="Presale Contract Contributions with Bonuses should correctly calculate effective amount when contribution spans multiple thresholds" time="0.021" classname="should correctly calculate effective amount when contribution spans multiple thresholds">
     </testcase>
-    <testcase name="Presale Contract Contributions with Bonuses should correctly handle contributions after all thresholds are crossed" time="0.030" classname="should correctly handle contributions after all thresholds are crossed">
+    <testcase name="Presale Contract Contributions with Bonuses should correctly handle contributions after all thresholds are crossed" time="0.028" classname="should correctly handle contributions after all thresholds are crossed">
     </testcase>
     <testcase name="Presale Contract Contributions with Bonuses should handle contributions exactly at threshold limits" time="0.013" classname="should handle contributions exactly at threshold limits">
     </testcase>
-    <testcase name="Presale Contract Contributions with Bonuses should calculate no bonus after all thresholds are met" time="0.015" classname="should calculate no bonus after all thresholds are met">
+    <testcase name="Presale Contract Contributions with Bonuses should calculate no bonus after all thresholds are met" time="0.016" classname="should calculate no bonus after all thresholds are met">
     </testcase>
     <testcase name="Presale Contract Contributions with Bonuses should reject contributions when the funding period is over" time="0.006" classname="should reject contributions when the funding period is over">
     </testcase>
-    <testcase name="Presale Contract Contributions with Bonuses should correctly calculate effective amount with bonus within first threshold using fallback" time="0.067" classname="should correctly calculate effective amount with bonus within first threshold using fallback">
+    <testcase name="Presale Contract Contributions with Bonuses should correctly calculate effective amount with bonus within first threshold using fallback" time="0.056" classname="should correctly calculate effective amount with bonus within first threshold using fallback">
     </testcase>
   </testsuite>
-  <testsuite name="Whitelist contributions" timestamp="2024-10-18T07:48:09" tests="4" file="/Users/Mac/Projects/Nodejs/LamboLlama/Contracts/test/presale.ts" time="0.186" failures="0">
+  <testsuite name="Whitelist contributions" timestamp="2024-10-18T08:34:16" tests="4" file="/Users/Mac/Projects/Nodejs/LamboLlama/Contracts/test/presale.ts" time="0.172" failures="0">
     <testcase name="Presale Contract Whitelist contributions should accept contributions during whitelist period" time="0.016" classname="should accept contributions during whitelist period">
     </testcase>
     <testcase name="Presale Contract Whitelist contributions should reject zero contributions" time="0.003" classname="should reject zero contributions">
@@ -140,80 +140,80 @@
     <testcase name="Presale Contract Whitelist contributions should reject contributions of non whitelisted during whitelist period" time="0.008" classname="should reject contributions of non whitelisted during whitelist period">
     </testcase>
   </testsuite>
-  <testsuite name="Whitelist contributions with Bonuses" timestamp="2024-10-18T07:48:09" tests="5" file="/Users/Mac/Projects/Nodejs/LamboLlama/Contracts/test/presale.ts" time="0.283" failures="0">
-    <testcase name="Presale Contract Whitelist contributions with Bonuses should correctly calculate effective amount with bonus within first threshold" time="0.015" classname="should correctly calculate effective amount with bonus within first threshold">
+  <testsuite name="Whitelist contributions with Bonuses" timestamp="2024-10-18T08:34:16" tests="5" file="/Users/Mac/Projects/Nodejs/LamboLlama/Contracts/test/presale.ts" time="0.285" failures="0">
+    <testcase name="Presale Contract Whitelist contributions with Bonuses should correctly calculate effective amount with bonus within first threshold" time="0.014" classname="should correctly calculate effective amount with bonus within first threshold">
     </testcase>
-    <testcase name="Presale Contract Whitelist contributions with Bonuses should correctly calculate effective amount when contribution spans multiple thresholds" time="0.023" classname="should correctly calculate effective amount when contribution spans multiple thresholds">
+    <testcase name="Presale Contract Whitelist contributions with Bonuses should correctly calculate effective amount when contribution spans multiple thresholds" time="0.025" classname="should correctly calculate effective amount when contribution spans multiple thresholds">
     </testcase>
-    <testcase name="Presale Contract Whitelist contributions with Bonuses should correctly handle contributions after all thresholds are crossed" time="0.034" classname="should correctly handle contributions after all thresholds are crossed">
+    <testcase name="Presale Contract Whitelist contributions with Bonuses should correctly handle contributions after all thresholds are crossed" time="0.033" classname="should correctly handle contributions after all thresholds are crossed">
     </testcase>
-    <testcase name="Presale Contract Whitelist contributions with Bonuses should handle contributions exactly at threshold limits" time="0.014" classname="should handle contributions exactly at threshold limits">
+    <testcase name="Presale Contract Whitelist contributions with Bonuses should handle contributions exactly at threshold limits" time="0.013" classname="should handle contributions exactly at threshold limits">
     </testcase>
-    <testcase name="Presale Contract Whitelist contributions with Bonuses should calculate no bonus after all thresholds are met" time="0.018" classname="should calculate no bonus after all thresholds are met">
+    <testcase name="Presale Contract Whitelist contributions with Bonuses should calculate no bonus after all thresholds are met" time="0.019" classname="should calculate no bonus after all thresholds are met">
     </testcase>
   </testsuite>
-  <testsuite name="Receive Ether Functionality" timestamp="2024-10-18T07:48:09" tests="3" file="/Users/Mac/Projects/Nodejs/LamboLlama/Contracts/test/presale.ts" time="0.151" failures="0">
-    <testcase name="Presale Contract Receive Ether Functionality should accept Ether during the funding period via receive()" time="0.044" classname="should accept Ether during the funding period via receive()">
+  <testsuite name="Receive Ether Functionality" timestamp="2024-10-18T08:34:16" tests="3" file="/Users/Mac/Projects/Nodejs/LamboLlama/Contracts/test/presale.ts" time="0.158" failures="0">
+    <testcase name="Presale Contract Receive Ether Functionality should accept Ether during the funding period via receive()" time="0.042" classname="should accept Ether during the funding period via receive()">
     </testcase>
     <testcase name="Presale Contract Receive Ether Functionality should revert when Ether is sent before the funding period via receive()" time="0.003" classname="should revert when Ether is sent before the funding period via receive()">
     </testcase>
-    <testcase name="Presale Contract Receive Ether Functionality should revert when Ether is sent after the funding period via receive()" time="0.001" classname="should revert when Ether is sent after the funding period via receive()">
+    <testcase name="Presale Contract Receive Ether Functionality should revert when Ether is sent after the funding period via receive()" time="0.003" classname="should revert when Ether is sent after the funding period via receive()">
     </testcase>
   </testsuite>
-  <testsuite name="Claiming and Vesting" timestamp="2024-10-18T07:48:09" tests="9" file="/Users/Mac/Projects/Nodejs/LamboLlama/Contracts/test/presale.ts" time="0.797" failures="0">
+  <testsuite name="Claiming and Vesting" timestamp="2024-10-18T08:34:16" tests="9" file="/Users/Mac/Projects/Nodejs/LamboLlama/Contracts/test/presale.ts" time="0.798" failures="0">
     <testcase name="Presale Contract Claiming and Vesting should only allow claiming tokens after the claim start time" time="0.012" classname="should only allow claiming tokens after the claim start time">
     </testcase>
     <testcase name="Presale Contract Claiming and Vesting should only allow claiming tokens if a contribution has been made" time="0.026" classname="should only allow claiming tokens if a contribution has been made">
     </testcase>
-    <testcase name="Presale Contract Claiming and Vesting should allow a user to claim their immediate tokens" time="0.064" classname="should allow a user to claim their immediate tokens">
+    <testcase name="Presale Contract Claiming and Vesting should allow a user to claim their immediate tokens" time="0.068" classname="should allow a user to claim their immediate tokens">
     </testcase>
-    <testcase name="Presale Contract Claiming and Vesting should allow one user to claim their immediate tokens" time="0.030" classname="should allow one user to claim their immediate tokens">
+    <testcase name="Presale Contract Claiming and Vesting should allow one user to claim their immediate tokens" time="0.031" classname="should allow one user to claim their immediate tokens">
     </testcase>
-    <testcase name="Presale Contract Claiming and Vesting should correctly calculate vested bonus tokens over time" time="0.065" classname="should correctly calculate vested bonus tokens over time">
+    <testcase name="Presale Contract Claiming and Vesting should correctly calculate vested bonus tokens over time" time="0.066" classname="should correctly calculate vested bonus tokens over time">
     </testcase>
-    <testcase name="Presale Contract Claiming and Vesting should allow a user to claim all vested bonus tokens after vesting period ends" time="0.061" classname="should allow a user to claim all vested bonus tokens after vesting period ends">
+    <testcase name="Presale Contract Claiming and Vesting should allow a user to claim all vested bonus tokens after vesting period ends" time="0.063" classname="should allow a user to claim all vested bonus tokens after vesting period ends">
     </testcase>
-    <testcase name="Presale Contract Claiming and Vesting should not claim immediate tokens if already claimed" time="0.077" classname="should not claim immediate tokens if already claimed">
+    <testcase name="Presale Contract Claiming and Vesting should not claim immediate tokens if already claimed" time="0.084" classname="should not claim immediate tokens if already claimed">
     </testcase>
-    <testcase name="Presale Contract Claiming and Vesting should claim no more bonuses if everything is claimed" time="0.088" classname="should claim no more bonuses if everything is claimed">
+    <testcase name="Presale Contract Claiming and Vesting should claim no more bonuses if everything is claimed" time="0.092" classname="should claim no more bonuses if everything is claimed">
     </testcase>
-    <testcase name="Presale Contract Claiming and Vesting should revert if user tries to claim without any contribution" time="0.027" classname="should revert if user tries to claim without any contribution">
+    <testcase name="Presale Contract Claiming and Vesting should revert if user tries to claim without any contribution" time="0.024" classname="should revert if user tries to claim without any contribution">
     </testcase>
   </testsuite>
-  <testsuite name="Vesting" timestamp="2024-10-18T07:48:10" tests="0" file="/Users/Mac/Projects/Nodejs/LamboLlama/Contracts/test/vesting.ts" time="0.000" failures="0">
+  <testsuite name="Vesting" timestamp="2024-10-18T08:34:17" tests="0" file="/Users/Mac/Projects/Nodejs/LamboLlama/Contracts/test/vesting.ts" time="0.000" failures="0">
   </testsuite>
-  <testsuite name="Deployment" timestamp="2024-10-18T07:48:10" tests="2" file="/Users/Mac/Projects/Nodejs/LamboLlama/Contracts/test/vesting.ts" time="0.047" failures="0">
+  <testsuite name="Deployment" timestamp="2024-10-18T08:34:17" tests="2" file="/Users/Mac/Projects/Nodejs/LamboLlama/Contracts/test/vesting.ts" time="0.045" failures="0">
     <testcase name="Vesting Deployment Should set the correct token address" time="0.002" classname="Should set the correct token address">
     </testcase>
-    <testcase name="Vesting Deployment Should not allow zero address for token" time="0.005" classname="Should not allow zero address for token">
+    <testcase name="Vesting Deployment Should not allow zero address for token" time="0.004" classname="Should not allow zero address for token">
     </testcase>
   </testsuite>
-  <testsuite name="withdraw" timestamp="2024-10-18T07:48:10" tests="3" file="/Users/Mac/Projects/Nodejs/LamboLlama/Contracts/test/vesting.ts" time="0.074" failures="0">
-    <testcase name="Vesting withdraw Should allow owner to withdraw tokens before contract is fixed" time="0.006" classname="Should allow owner to withdraw tokens before contract is fixed">
+  <testsuite name="withdraw" timestamp="2024-10-18T08:34:17" tests="3" file="/Users/Mac/Projects/Nodejs/LamboLlama/Contracts/test/vesting.ts" time="0.077" failures="0">
+    <testcase name="Vesting withdraw Should allow owner to withdraw tokens before contract is fixed" time="0.007" classname="Should allow owner to withdraw tokens before contract is fixed">
     </testcase>
     <testcase name="Vesting withdraw Should not allow non-owner to withdraw when the contract is not fixed" time="0.005" classname="Should not allow non-owner to withdraw when the contract is not fixed">
     </testcase>
     <testcase name="Vesting withdraw Should not allow owner to withdraw tokens after contract is fixed" time="0.006" classname="Should not allow owner to withdraw tokens after contract is fixed">
     </testcase>
   </testsuite>
-  <testsuite name="withdrawStuckERC20" timestamp="2024-10-18T07:48:10" tests="3" file="/Users/Mac/Projects/Nodejs/LamboLlama/Contracts/test/vesting.ts" time="0.084" failures="0">
+  <testsuite name="withdrawStuckERC20" timestamp="2024-10-18T08:34:17" tests="3" file="/Users/Mac/Projects/Nodejs/LamboLlama/Contracts/test/vesting.ts" time="0.085" failures="0">
     <testcase name="Vesting withdrawStuckERC20 Should allow owner to withdraw stuck ERC20 tokens" time="0.008" classname="Should allow owner to withdraw stuck ERC20 tokens">
     </testcase>
-    <testcase name="Vesting withdrawStuckERC20 Should not allow owner to withdraw vesting token" time="0.002" classname="Should not allow owner to withdraw vesting token">
+    <testcase name="Vesting withdrawStuckERC20 Should not allow owner to withdraw vesting token" time="0.004" classname="Should not allow owner to withdraw vesting token">
     </testcase>
-    <testcase name="Vesting withdrawStuckERC20 Should not allow non-owner to withdraw stuck ERC20 tokens" time="0.006" classname="Should not allow non-owner to withdraw stuck ERC20 tokens">
-    </testcase>
-  </testsuite>
-  <testsuite name="fix" timestamp="2024-10-18T07:48:10" tests="2" file="/Users/Mac/Projects/Nodejs/LamboLlama/Contracts/test/vesting.ts" time="0.044" failures="0">
-    <testcase name="Vesting fix Should allow owner to fix the contract" time="0.004" classname="Should allow owner to fix the contract">
-    </testcase>
-    <testcase name="Vesting fix Should not allow non-owner to fix the contract" time="0.004" classname="Should not allow non-owner to fix the contract">
+    <testcase name="Vesting withdrawStuckERC20 Should not allow non-owner to withdraw stuck ERC20 tokens" time="0.005" classname="Should not allow non-owner to withdraw stuck ERC20 tokens">
     </testcase>
   </testsuite>
-  <testsuite name="Set Vesting Schedule" timestamp="2024-10-18T07:48:10" tests="6" file="/Users/Mac/Projects/Nodejs/LamboLlama/Contracts/test/vesting.ts" time="0.135" failures="0">
+  <testsuite name="fix" timestamp="2024-10-18T08:34:17" tests="2" file="/Users/Mac/Projects/Nodejs/LamboLlama/Contracts/test/vesting.ts" time="0.048" failures="0">
+    <testcase name="Vesting fix Should allow owner to fix the contract" time="0.003" classname="Should allow owner to fix the contract">
+    </testcase>
+    <testcase name="Vesting fix Should not allow non-owner to fix the contract" time="0.005" classname="Should not allow non-owner to fix the contract">
+    </testcase>
+  </testsuite>
+  <testsuite name="Set Vesting Schedule" timestamp="2024-10-18T08:34:17" tests="6" file="/Users/Mac/Projects/Nodejs/LamboLlama/Contracts/test/vesting.ts" time="0.134" failures="0">
     <testcase name="Vesting Set Vesting Schedule Should allow owner to set vesting schedule" time="0.005" classname="Should allow owner to set vesting schedule">
     </testcase>
-    <testcase name="Vesting Set Vesting Schedule Should not allow non-owner to set vesting schedule" time="0.003" classname="Should not allow non-owner to set vesting schedule">
+    <testcase name="Vesting Set Vesting Schedule Should not allow non-owner to set vesting schedule" time="0.002" classname="Should not allow non-owner to set vesting schedule">
     </testcase>
     <testcase name="Vesting Set Vesting Schedule Should not allow setting zero address for beneficiary" time="0.002" classname="Should not allow setting zero address for beneficiary">
     </testcase>
@@ -224,26 +224,26 @@
     <testcase name="Vesting Set Vesting Schedule Should not allow setting vesting schedule after contract is fixed" time="0.004" classname="Should not allow setting vesting schedule after contract is fixed">
     </testcase>
   </testsuite>
-  <testsuite name="Claim Tokens" timestamp="2024-10-18T07:48:10" tests="7" file="/Users/Mac/Projects/Nodejs/LamboLlama/Contracts/test/vesting.ts" time="0.283" failures="0">
-    <testcase name="Vesting Claim Tokens Should allow beneficiaries to claim vested tokens after start period" time="0.015" classname="Should allow beneficiaries to claim vested tokens after start period">
+  <testsuite name="Claim Tokens" timestamp="2024-10-18T08:34:17" tests="7" file="/Users/Mac/Projects/Nodejs/LamboLlama/Contracts/test/vesting.ts" time="0.282" failures="0">
+    <testcase name="Vesting Claim Tokens Should allow beneficiaries to claim vested tokens after start period" time="0.013" classname="Should allow beneficiaries to claim vested tokens after start period">
     </testcase>
-    <testcase name="Vesting Claim Tokens Should allow beneficiaries to claim vested tokens after start period close to the end" time="0.014" classname="Should allow beneficiaries to claim vested tokens after start period close to the end">
+    <testcase name="Vesting Claim Tokens Should allow beneficiaries to claim vested tokens after start period close to the end" time="0.016" classname="Should allow beneficiaries to claim vested tokens after start period close to the end">
     </testcase>
-    <testcase name="Vesting Claim Tokens Should allow beneficiaries to claim all vested tokens after full duration" time="0.017" classname="Should allow beneficiaries to claim all vested tokens after full duration">
+    <testcase name="Vesting Claim Tokens Should allow beneficiaries to claim all vested tokens after full duration" time="0.015" classname="Should allow beneficiaries to claim all vested tokens after full duration">
     </testcase>
     <testcase name="Vesting Claim Tokens Should allow beneficiaries to claim only vested tokens after more than full duration" time="0.017" classname="Should allow beneficiaries to claim only vested tokens after more than full duration">
     </testcase>
-    <testcase name="Vesting Claim Tokens Should correctly claim total amount if claiming few times during claim period" time="0.021" classname="Should correctly claim total amount if claiming few times during claim period">
+    <testcase name="Vesting Claim Tokens Should correctly claim total amount if claiming few times during claim period" time="0.022" classname="Should correctly claim total amount if claiming few times during claim period">
     </testcase>
-    <testcase name="Vesting Claim Tokens Should not allow beneficiaries to claim tokens before start period" time="0.002" classname="Should not allow beneficiaries to claim tokens before start period">
+    <testcase name="Vesting Claim Tokens Should not allow beneficiaries to claim tokens before start period" time="0.003" classname="Should not allow beneficiaries to claim tokens before start period">
     </testcase>
     <testcase name="Vesting Claim Tokens Should not allow beneficiaries to claim more tokens than vested" time="0.012" classname="Should not allow beneficiaries to claim more tokens than vested">
     </testcase>
   </testsuite>
-  <testsuite name="Get Claimable Amount" timestamp="2024-10-18T07:48:11" tests="3" file="/Users/Mac/Projects/Nodejs/LamboLlama/Contracts/test/vesting.ts" time="0.077" failures="0">
-    <testcase name="Vesting Get Claimable Amount Should return zero claimable amount before start period" time="0.000" classname="Should return zero claimable amount before start period">
+  <testsuite name="Get Claimable Amount" timestamp="2024-10-18T08:34:18" tests="3" file="/Users/Mac/Projects/Nodejs/LamboLlama/Contracts/test/vesting.ts" time="0.080" failures="0">
+    <testcase name="Vesting Get Claimable Amount Should return zero claimable amount before start period" time="0.002" classname="Should return zero claimable amount before start period">
     </testcase>
-    <testcase name="Vesting Get Claimable Amount Should return correct claimable amount during vesting period" time="0.004" classname="Should return correct claimable amount during vesting period">
+    <testcase name="Vesting Get Claimable Amount Should return correct claimable amount during vesting period" time="0.005" classname="Should return correct claimable amount during vesting period">
     </testcase>
     <testcase name="Vesting Get Claimable Amount Should return full claimable amount after full duration" time="0.006" classname="Should return full claimable amount after full duration">
     </testcase>

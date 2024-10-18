@@ -27,8 +27,9 @@ contract Presale is Ownable, ReentrancyGuard {
     }
 
     // Custom errors for more gas-efficient error handling
-    error NoValue(); // Thrown when no ETH is sent with the contribution
+
     error TransferFailed(); // Thrown when ETH transfer to treasury wallet fails
+    error LowContribution(); // Thrown when ETH sent does not meet the minimum contribution
     error AlreadyDeposited(); // Thrown when tokens have already been deposited
     error InvalidWalletInput(); // Thrown when an invalid wallet address is provided
     error InvalidPresaleClaimInput(); // Thrown when presale claim time is invalid
@@ -59,8 +60,11 @@ contract Presale is Ownable, ReentrancyGuard {
     /// @param amount The amount of bonus tokens claimed
     event BonusTokensClaimed(address indexed user, uint256 amount);
 
-    // Constants for percentage calculations
+    // Constants for the presale
+    uint256 public constant MIN_CONTRIBUTION = 0.0002 ether; // Minimum contribution amount about 50 cents
     uint256 private constant MIN_SUPPLY = 1000 ether; // Minimum presale supply required
+
+    // Constants for percentage calculations
     uint256 private constant ONE_PERCENT = 10 ** 27; // Represents 1% in fixed-point arithmetic
     uint256 private constant ONE_HUNDRED_PERCENT = 100 * ONE_PERCENT; // Represents 100%
 
@@ -205,8 +209,8 @@ contract Presale is Ownable, ReentrancyGuard {
      * @param signature The signature for whitelist verification during the whitelist period
      */
     function contribute(bytes memory signature) public payable nonReentrant {
-        if (msg.value == 0) {
-            revert NoValue(); // Ensure some ETH is sent
+        if (msg.value < MIN_CONTRIBUTION) {
+            revert LowContribution(); // Ensure no dust eth is sent
         }
 
         // Check if contribution is within allowed time frames

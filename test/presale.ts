@@ -182,25 +182,6 @@ describe('Presale Contract', function () {
 				).to.be.revertedWithCustomError(presale, 'InvalidPresaleClaimInput');
 			});
 
-			it('should revert if total tokens for sale is less then 1000 eth', async function () {
-				const PresaleFactory = await ethers.getContractFactory('Presale');
-				const invalidTotalTokens = ethers.utils.parseEther('100'); //100 tokens allocated for sale
-
-				await expect(
-					PresaleFactory.deploy(
-						token.address,
-						invalidTotalTokens,
-						whitelistSigner.address,
-						treasuryWallet.address,
-						whitelistStartTime,
-						whitelistEndTime,
-						publicPresaleStartTime,
-						publicPresaleEndTime,
-						presaleClaimStartTime
-					)
-				).to.be.revertedWithCustomError(presale, 'InvalidPresaleInput');
-			});
-
 			it('should revert if funds wallet address is zero address', async function () {
 				const PresaleFactory = await ethers.getContractFactory('Presale');
 				const zeroAddress = ethers.constants.AddressZero; // Invalid wallet address
@@ -293,12 +274,6 @@ describe('Presale Contract', function () {
 			// Check that treasuryWallet received the ETH
 			const finalFundsWalletBalance = await ethers.provider.getBalance(treasuryWallet.address);
 			expect(finalFundsWalletBalance.sub(initialFundsWalletBalance)).to.equal(contributionAmount);
-		});
-
-		it('should reject contributions that are less than the minimum contribution of 0.0002 eth', async function () {
-			await expect(
-				presale.connect(investor1).contribute(ethers.constants.HashZero, { value: 1 })
-			).to.be.revertedWithCustomError(presale, 'LowContribution');
 		});
 
 		it('should handle multiple contributions from the same investor', async function () {
@@ -772,7 +747,7 @@ describe('Presale Contract', function () {
 			// Contribute a large amount so we can claim later
 			const contributionAmount1 = ethers.utils.parseEther('80'); // 80 ETH
 			const contributionAmount2 = ethers.utils.parseEther('20'); // 20 ETH
-			const contributionAmount3 = ethers.utils.parseEther('0.0002'); // 0.0002 ETH
+			const contributionAmount3 = ethers.BigNumber.from('1'); // 1 WEI
 
 			const signature1 = await whitelist.generateWhitelistSignature(whitelistSigner, investor1);
 			const signature2 = await whitelist.generateWhitelistSignature(whitelistSigner, investor2);
@@ -797,7 +772,7 @@ describe('Presale Contract', function () {
 			// Contribute a large amount so we can claim later
 			const contributionAmount1 = ethers.utils.parseEther('12'); // 80 ETH
 			const contributionAmount2 = ethers.utils.parseEther('7'); // 20 ETH
-			const contributionAmount3 = ethers.utils.parseEther('0.0002'); // 0.0002 ETH
+			const contributionAmount3 = ethers.BigNumber.from('1'); // 1 WEI
 
 			const signature1 = await whitelist.generateWhitelistSignature(whitelistSigner, investor1);
 			const signature2 = await whitelist.generateWhitelistSignature(whitelistSigner, investor2);
@@ -889,7 +864,7 @@ describe('Presale Contract', function () {
 			// Contribute a large amount so we can claim later
 			const contributionAmount1 = ethers.utils.parseEther('900000000000'); // 9 ETH
 			const contributionAmount2 = ethers.utils.parseEther('16'); // 16 ETH
-			const contributionAmount3 = ethers.utils.parseEther('0.0002'); // 0.0002 ETH
+			const contributionAmount3 = ethers.BigNumber.from('1'); // 1 WEI
 
 			const signature1 = await whitelist.generateWhitelistSignature(whitelistSigner, investor1);
 			const signature2 = await whitelist.generateWhitelistSignature(whitelistSigner, investor2);
@@ -973,7 +948,7 @@ describe('Presale Contract', function () {
 			// Contribute a large amount so we can claim later
 			const contributionAmount1 = ethers.utils.parseEther('15'); // 80 ETH
 			const contributionAmount2 = ethers.utils.parseEther('6'); // 20 ETH
-			const contributionAmount3 = ethers.utils.parseEther('0.0002'); // 0.0002 ETH
+			const contributionAmount3 = ethers.BigNumber.from('1'); // 1 WEI
 
 			const signature1 = await whitelist.generateWhitelistSignature(whitelistSigner, investor1);
 			const signature2 = await whitelist.generateWhitelistSignature(whitelistSigner, investor2);
@@ -1043,7 +1018,7 @@ describe('Presale Contract', function () {
 			// Contribute a large amount so we can claim later
 			const contributionAmount1 = ethers.utils.parseEther('4'); // 4 ETH
 			const contributionAmount2 = ethers.utils.parseEther('3'); // 3 ETH
-			const contributionAmount3 = ethers.utils.parseEther('0.0002'); // 0.0002 ETH
+			const contributionAmount3 = ethers.BigNumber.from('1'); // 1 WEI
 
 			const signature1 = await whitelist.generateWhitelistSignature(whitelistSigner, investor1);
 			const signature2 = await whitelist.generateWhitelistSignature(whitelistSigner, investor2);
@@ -1121,7 +1096,7 @@ describe('Presale Contract', function () {
 			// Contribute a large amount so we can claim later
 			const contributionAmount1 = ethers.utils.parseEther('10'); // 10 ETH
 			const contributionAmount2 = ethers.utils.parseEther('4'); // 4 ETH
-			const contributionAmount3 = ethers.utils.parseEther('0.0002'); // 0.0002 ETH
+			const contributionAmount3 = ethers.BigNumber.from('1'); // 1 WEI
 
 			const signature1 = await whitelist.generateWhitelistSignature(whitelistSigner, investor1);
 			const signature2 = await whitelist.generateWhitelistSignature(whitelistSigner, investor2);

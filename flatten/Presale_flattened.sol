@@ -999,10 +999,6 @@ pragma solidity 0.8.22;
     /// @param amount The amount of bonus tokens claimed
     event BonusTokensClaimed(address indexed user, uint256 amount);
 
-    // Constants for the presale
-    uint256 private constant MIN_CONTRIBUTION = 0.0002 ether; // Minimum contribution amount about 50 cents
-    uint256 private constant MIN_SUPPLY = 1000 ether; // Minimum presale supply required
-
     // Constants for percentage calculations
     uint256 private constant ONE_PERCENT = 10 ** 27; // Represents 1% in fixed-point arithmetic
     uint256 private constant ONE_HUNDRED_PERCENT = 100 * ONE_PERCENT; // Represents 100%
@@ -1084,8 +1080,6 @@ pragma solidity 0.8.22;
         uint256 _publicPresaleEndTime,
         uint256 _presaleClaimStartTime
     ) {
-        // Validate presale supply
-        if (_presaleSupply < MIN_SUPPLY) revert InvalidPresaleInput();
         // Validate treasury wallet address
         if (_treasuryWallet == address(0)) revert InvalidWalletInput();
 
@@ -1148,7 +1142,7 @@ pragma solidity 0.8.22;
      * @param signature The signature for whitelist verification during the whitelist period
      */
     function contribute(bytes memory signature) public payable nonReentrant {
-        if (msg.value < MIN_CONTRIBUTION) {
+        if (msg.value == 0) {
             revert LowContribution(); // Ensure no dust eth is sent
         }
 

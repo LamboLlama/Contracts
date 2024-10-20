@@ -210,7 +210,7 @@ contract Presale is Ownable, ReentrancyGuard {
 
         // If within whitelist period, verify signature
         if (block.timestamp <= whitelistEndTime) {
-            if (!isWhitelisted(signature)) {
+            if (signature.length == 0 || !isWhitelisted(signature)) {
                 revert NotWhitelisted();
             }
         }

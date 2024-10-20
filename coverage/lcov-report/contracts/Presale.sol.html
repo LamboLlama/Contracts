@@ -22,12 +22,12 @@
       <div class='fl pad1y space-right2'>
         <span class="strong">100% </span>
         <span class="quiet">Statements</span>
-        <span class='fraction'>49/49</span>
+        <span class='fraction'>47/47</span>
       </div>
       <div class='fl pad1y space-right2'>
-        <span class="strong">96.3% </span>
+        <span class="strong">96.15% </span>
         <span class="quiet">Branches</span>
-        <span class='fraction'>52/54</span>
+        <span class='fraction'>50/52</span>
       </div>
       <div class='fl pad1y space-right2'>
         <span class="strong">100% </span>
@@ -37,7 +37,7 @@
       <div class='fl pad1y space-right2'>
         <span class="strong">100% </span>
         <span class="quiet">Lines</span>
-        <span class='fraction'>80/80</span>
+        <span class='fraction'>77/77</span>
       </div>
     </div>
   </div>
@@ -374,16 +374,7 @@
 329
 330
 331
-332
-333
-334
-335
-336
-337
-338
-339
-340
-341</td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+332</td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -572,11 +563,11 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">2×</span>
-<span class="cline-any cline-yes">2×</span>
+<span class="cline-any cline-yes">16×</span>
+<span class="cline-any cline-yes">16×</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">2×</span>
+<span class="cline-any cline-yes">16×</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -596,15 +587,6 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">76×</span>
 <span class="cline-any cline-yes">14×</span>
-<span class="cline-any cline-yes">1×</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">13×</span>
-<span class="cline-any cline-yes">13×</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">13×</span>
 <span class="cline-any cline-yes">1×</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -703,6 +685,8 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">14×</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">14×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">10×</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">4×</span>
@@ -710,8 +694,6 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">4×</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -910,7 +892,7 @@ contract Presale is Ownable, ReentrancyGuard {
      * @param signature The signature provided by the user
      * @return bool indicating whether the user is whitelisted
      */
-    function isWhitelisted(bytes memory signature) external view returns (bool) {
+    function isWhitelisted(bytes memory signature) public view returns (bool) {
         // Recreate the signed message hash
         bytes32 messageHash = keccak256(abi.encodePacked(msg.sender));
         bytes32 ethSignedMessageHash = ECDSA.toEthSignedMessageHash(messageHash);
@@ -935,16 +917,7 @@ contract Presale is Ownable, ReentrancyGuard {
 &nbsp;
         // If within whitelist period, verify signature
         if (block.timestamp &lt;= whitelistEndTime) {
-            if (signature.length == 0) {
-                revert NotWhitelisted();
-            }
-&nbsp;
-            // Recreate the signed message hash
-            bytes32 messageHash = keccak256(abi.encodePacked(msg.sender));
-            bytes32 ethSignedMessageHash = ECDSA.toEthSignedMessageHash(messageHash);
-&nbsp;
-            // Verify the signature
-            if (ECDSA.recover(ethSignedMessageHash, signature) != whitelistSigner) {
+            if (!isWhitelisted(signature)) {
                 revert NotWhitelisted();
             }
         }
@@ -1041,17 +1014,17 @@ contract Presale is Ownable, ReentrancyGuard {
      * @return The amount of bonus tokens that have vested
      */
     function _vestedBonusTokens(uint256 bonusAmountEth) internal view returns (uint256) {
+        uint256 bonusAmountTokens = (bonusAmountEth * presaleSupply) / totalEthEffective;
+&nbsp;
         if (block.timestamp &gt;= presaleVestingEndTime) {
             // All bonus tokens have vested
-            return (bonusAmountEth * presaleSupply) / totalEthEffective;
+            return bonusAmountTokens;
         } else {
             uint256 vestingDuration = presaleVestingEndTime - presaleClaimStartTime; // Total vesting duration
             uint256 timeElapsed = block.timestamp - presaleClaimStartTime; // Time elapsed since claim start
 &nbsp;
             // Calculate vested amount proportionally
-            return
-                (((bonusAmountEth * timeElapsed) / vestingDuration) * presaleSupply) /
-                totalEthEffective;
+            return bonusAmountTokens * timeElapsed / vestingDuration;
         }
     }
 &nbsp;
@@ -1069,7 +1042,7 @@ contract Presale is Ownable, ReentrancyGuard {
 </div><!-- /wrapper -->
 <div class='footer quiet pad2 space-top1 center small'>
   Code coverage
-  generated by <a href="http://istanbul-js.org/" target="_blank">istanbul</a> at Sat Oct 19 2024 20:28:37 GMT+0200 (Central European Summer Time)
+  generated by <a href="http://istanbul-js.org/" target="_blank">istanbul</a> at Sun Oct 20 2024 15:44:29 GMT+0100 (Western European Summer Time)
 </div>
 </div>
 <script src="../prettify.js"></script>

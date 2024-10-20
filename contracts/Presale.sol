@@ -185,7 +185,7 @@ contract Presale is Ownable, ReentrancyGuard {
      * @param signature The signature provided by the user
      * @return bool indicating whether the user is whitelisted
      */
-    function isWhitelisted(bytes memory signature) external view returns (bool) {
+    function isWhitelisted(bytes memory signature) public view returns (bool) {
         // Recreate the signed message hash
         bytes32 messageHash = keccak256(abi.encodePacked(msg.sender));
         bytes32 ethSignedMessageHash = ECDSA.toEthSignedMessageHash(messageHash);
@@ -210,16 +210,7 @@ contract Presale is Ownable, ReentrancyGuard {
 
         // If within whitelist period, verify signature
         if (block.timestamp <= whitelistEndTime) {
-            if (signature.length == 0) {
-                revert NotWhitelisted();
-            }
-
-            // Recreate the signed message hash
-            bytes32 messageHash = keccak256(abi.encodePacked(msg.sender));
-            bytes32 ethSignedMessageHash = ECDSA.toEthSignedMessageHash(messageHash);
-
-            // Verify the signature
-            if (ECDSA.recover(ethSignedMessageHash, signature) != whitelistSigner) {
+            if (!isWhitelisted(signature)) {
                 revert NotWhitelisted();
             }
         }
@@ -299,8 +290,7 @@ contract Presale is Ownable, ReentrancyGuard {
 
             if (claimableTokens > 0) {
                 // Update user's claimed bonus tokens
-                userContribution.claimedBonusTokens =
-                    userContribution.claimedBonusTokens +
+                userContribution.claimedBonusTokens +=
                     claimableTokens;
 
                 token.transfer(msg.sender, claimableTokens); // Transfer bonus tokens to the user
@@ -316,17 +306,17 @@ contract Presale is Ownable, ReentrancyGuard {
      * @return The amount of bonus tokens that have vested
      */
     function _vestedBonusTokens(uint256 bonusAmountEth) internal view returns (uint256) {
+        uint256 bonusAmountTokens = (bonusAmountEth * presaleSupply) / totalEthEffective;
+
         if (block.timestamp >= presaleVestingEndTime) {
             // All bonus tokens have vested
-            return (bonusAmountEth * presaleSupply) / totalEthEffective;
+            return bonusAmountTokens;
         } else {
             uint256 vestingDuration = presaleVestingEndTime - presaleClaimStartTime; // Total vesting duration
             uint256 timeElapsed = block.timestamp - presaleClaimStartTime; // Time elapsed since claim start
 
             // Calculate vested amount proportionally
-            return
-                (((bonusAmountEth * timeElapsed) / vestingDuration) * presaleSupply) /
-                totalEthEffective;
+            return bonusAmountTokens * timeElapsed / vestingDuration;
         }
     }
 

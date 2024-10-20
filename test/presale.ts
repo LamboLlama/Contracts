@@ -522,7 +522,7 @@ describe('Presale Contract', function () {
 			await time.increaseTo(whitelistStartTime);
 
 			const contributionAmount = ethers.utils.parseEther('10'); // 10 ETH
-			const signature = '0x';
+			const signature = await whitelist.generateWhitelistSignature(whitelistSigner, investor2);
 
 			await expect(
 				presale.connect(investor1).contribute(signature, { value: contributionAmount })

@@ -97,7 +97,7 @@ FNH:7
 FNDA:25,afterClaimStart
 FNDA:137,constructor
 FNDA:44,depositTokens
-FNDA:15,isWhitelisted
+FNDA:16,isWhitelisted
 FNDA:82,contribute
 FNDA:24,claim
 FNDA:14,_vestedBonusTokens
@@ -124,9 +124,9 @@ DA:179,44
 DA:180,43
 DA:181,43
 DA:182,43
-DA:192,15
-DA:193,15
-DA:196,15
+DA:192,16
+DA:193,16
+DA:196,16
 DA:204,82
 DA:205,1
 DA:209,81

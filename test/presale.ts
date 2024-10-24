@@ -211,6 +211,10 @@ describe('Presale Contract', function () {
 			// Check that a random signature does not work
 			const fakeSignature = await whitelist.generateWhitelistSignature(whitelistSigner, investor2);
 			expect(await presale.connect(investor1).isWhitelisted(fakeSignature)).to.be.false;
+
+			// Check an empty signature
+			const emptySignature = '0x000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000011b';
+			expect(await presale.connect(investor1).isWhitelisted(emptySignature)).to.be.false;
 		});
 	});
 

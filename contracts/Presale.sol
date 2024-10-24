@@ -148,17 +148,19 @@ contract Presale is Ownable, ReentrancyGuard {
 
         // Initialize state variables
         token = _token;
-        publicPresaleStartTime = _publicPresaleStartTime;
-        publicPresaleEndTime = _publicPresaleEndTime;
-        presaleClaimStartTime = _presaleClaimStartTime;
-        presaleVestingEndTime = presaleClaimStartTime + 30 days; // Vesting ends 30 days after claim start
-        whitelistStartTime = _whitelistStartTime;
-        whitelistEndTime = _whitelistEndTime;
+        presaleSupply = _presaleSupply;
 
         treasuryWallet = _treasuryWallet;
         whitelistSigner = _whitelistSigner;
 
-        presaleSupply = _presaleSupply;
+        publicPresaleStartTime = _publicPresaleStartTime;
+        publicPresaleEndTime = _publicPresaleEndTime;
+
+        whitelistStartTime = _whitelistStartTime;
+        whitelistEndTime = _whitelistEndTime;
+
+        presaleClaimStartTime = _presaleClaimStartTime;
+        presaleVestingEndTime = presaleClaimStartTime + 30 days; // Vesting ends 30 days after claim start
 
         // Initialize bonus thresholds and rates
         bonusRates = [
@@ -290,8 +292,7 @@ contract Presale is Ownable, ReentrancyGuard {
 
             if (claimableTokens > 0) {
                 // Update user's claimed bonus tokens
-                userContribution.claimedBonusTokens +=
-                    claimableTokens;
+                userContribution.claimedBonusTokens += claimableTokens;
 
                 token.transfer(msg.sender, claimableTokens); // Transfer bonus tokens to the user
 
@@ -316,7 +317,7 @@ contract Presale is Ownable, ReentrancyGuard {
             uint256 timeElapsed = block.timestamp - presaleClaimStartTime; // Time elapsed since claim start
 
             // Calculate vested amount proportionally
-            return bonusAmountTokens * timeElapsed / vestingDuration;
+            return (bonusAmountTokens * timeElapsed) / vestingDuration;
         }
     }
 

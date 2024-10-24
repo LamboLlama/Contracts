@@ -25,9 +25,9 @@
         <span class='fraction'>47/47</span>
       </div>
       <div class='fl pad1y space-right2'>
-        <span class="strong">96.15% </span>
+        <span class="strong">96.3% </span>
         <span class="quiet">Branches</span>
-        <span class='fraction'>50/52</span>
+        <span class='fraction'>52/54</span>
       </div>
       <div class='fl pad1y space-right2'>
         <span class="strong">100% </span>
@@ -525,15 +525,17 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">132×</span>
 <span class="cline-any cline-yes">132×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">132×</span>
 <span class="cline-any cline-yes">132×</span>
-<span class="cline-any cline-yes">132×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">132×</span>
 <span class="cline-any cline-yes">132×</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">132×</span>
 <span class="cline-any cline-yes">132×</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">132×</span>
 <span class="cline-any cline-yes">132×</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -563,11 +565,11 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">16×</span>
-<span class="cline-any cline-yes">16×</span>
+<span class="cline-any cline-yes">15×</span>
+<span class="cline-any cline-yes">15×</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">16×</span>
+<span class="cline-any cline-yes">15×</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -587,7 +589,7 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">76×</span>
 <span class="cline-any cline-yes">14×</span>
-<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-yes">2×</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -667,8 +669,6 @@
 <span class="cline-any cline-yes">14×</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">10×</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">10×</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -855,17 +855,19 @@ contract Presale is Ownable, ReentrancyGuard {
 &nbsp;
         // Initialize state variables
         token = _token;
-        publicPresaleStartTime = _publicPresaleStartTime;
-        publicPresaleEndTime = _publicPresaleEndTime;
-        presaleClaimStartTime = _presaleClaimStartTime;
-        presaleVestingEndTime = presaleClaimStartTime + 30 days; // Vesting ends 30 days after claim start
-        whitelistStartTime = _whitelistStartTime;
-        whitelistEndTime = _whitelistEndTime;
+        presaleSupply = _presaleSupply;
 &nbsp;
         treasuryWallet = _treasuryWallet;
         whitelistSigner = _whitelistSigner;
 &nbsp;
-        presaleSupply = _presaleSupply;
+        publicPresaleStartTime = _publicPresaleStartTime;
+        publicPresaleEndTime = _publicPresaleEndTime;
+&nbsp;
+        whitelistStartTime = _whitelistStartTime;
+        whitelistEndTime = _whitelistEndTime;
+&nbsp;
+        presaleClaimStartTime = _presaleClaimStartTime;
+        presaleVestingEndTime = presaleClaimStartTime + 30 days; // Vesting ends 30 days after claim start
 &nbsp;
         // Initialize bonus thresholds and rates
         bonusRates = [
@@ -917,7 +919,7 @@ contract Presale is Ownable, ReentrancyGuard {
 &nbsp;
         // If within whitelist period, verify signature
         if (block.timestamp &lt;= whitelistEndTime) {
-            if (!isWhitelisted(signature)) {
+            if (signature.length == 0 || !isWhitelisted(signature)) {
                 revert NotWhitelisted();
             }
         }
@@ -997,9 +999,7 @@ contract Presale is Ownable, ReentrancyGuard {
 &nbsp;
             if (claimableTokens &gt; 0) {
                 // Update user's claimed bonus tokens
-                userContribution.claimedBonusTokens =
-                    userContribution.claimedBonusTokens +
-                    claimableTokens;
+                userContribution.claimedBonusTokens += claimableTokens;
 &nbsp;
                 token.transfer(msg.sender, claimableTokens); // Transfer bonus tokens to the user
 &nbsp;
@@ -1024,7 +1024,7 @@ contract Presale is Ownable, ReentrancyGuard {
             uint256 timeElapsed = block.timestamp - presaleClaimStartTime; // Time elapsed since claim start
 &nbsp;
             // Calculate vested amount proportionally
-            return bonusAmountTokens * timeElapsed / vestingDuration;
+            return (bonusAmountTokens * timeElapsed) / vestingDuration;
         }
     }
 &nbsp;
@@ -1042,7 +1042,7 @@ contract Presale is Ownable, ReentrancyGuard {
 </div><!-- /wrapper -->
 <div class='footer quiet pad2 space-top1 center small'>
   Code coverage
-  generated by <a href="http://istanbul-js.org/" target="_blank">istanbul</a> at Sun Oct 20 2024 15:44:29 GMT+0100 (Western European Summer Time)
+  generated by <a href="http://istanbul-js.org/" target="_blank">istanbul</a> at Thu Oct 24 2024 16:28:47 GMT+0200 (Central European Summer Time)
 </div>
 </div>
 <script src="../prettify.js"></script>

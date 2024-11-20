@@ -29,6 +29,12 @@ The vesting contract ensures that team tokens are released over a specified time
 
 - **Time-based Vesting**: Tokens are gradually released over time. Vesting is linear and the vesting time is 12 months
 
+### 5. **Airdrop Zerion Contract**
+
+The airdrop contract for zerion facilitates the distribution of LLL tokens to eligible users. It allows:
+
+- **Airdrop Claim**: Users can claim their airdrop directly through the contract.
+
 ## How to Use
 
 1. **Clone the Repository**:

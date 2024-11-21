@@ -256,4 +256,69 @@ describe('AirdropZerion', function () {
             await ethers.provider.send('hardhat_stopImpersonatingAccount', [testAddress]);
         }).timeout(60000); // Increase timeout if necessary
     });
+
+    describe('Testing with JSON formatted data', function () {
+        let testData: { [address: string]: { allocationWei: string; proof: string[] } };
+
+        before(async function () {
+            // Create test data in the specified JSON format
+            testData = {};
+
+            for (const { address, amount } of claimList) {
+                // Generate leaf
+                const leaf = ethers.utils.keccak256(
+                    ethers.utils.solidityPack(['address', 'uint256'], [address, amount])
+                );
+
+                // Generate proof
+                const proof = merkleTree.getHexProof(leaf);
+
+                // Store data in the specified format
+                testData[address] = {
+                    allocationWei: amount.toString(),
+                    proof,
+                };
+            }
+        });
+
+        it('Should successfully claim using data from the JSON object', async function () {
+            // Choose one of the addresses (e.g., addr1)
+            const testAddress = addr1.address;
+            const signer = addr1;
+
+            // Retrieve data from the testData object
+            const { allocationWei, proof } = testData[testAddress];
+
+            // Convert allocationWei back to BigNumber
+            const amount = ethers.BigNumber.from(allocationWei);
+
+            // Perform the claim
+            await expect(airdrop.connect(signer).claim(amount, proof))
+                .to.emit(airdrop, 'Claimed')
+                .withArgs(testAddress, amount);
+
+            // Verify that the tokens were received
+            const balance = await token.balanceOf(testAddress);
+            expect(balance).to.equal(amount);
+
+            // Verify that the claimed status is updated
+            expect(await airdrop.claimed(testAddress)).to.be.true;
+        });
+
+        it('Should revert with InvalidMerkleProof when using incorrect data', async function () {
+            // Choose an address and use incorrect amount
+            const testAddress = addr2.address;
+            const signer = addr2;
+
+            // Retrieve correct proof but incorrect amount (use addr3's amount)
+            const incorrectAmount = ethers.BigNumber.from(testData[addr3.address].allocationWei);
+            const { proof } = testData[testAddress];
+
+            // Attempt to claim with incorrect amount
+            await expect(airdrop.connect(signer).claim(incorrectAmount, proof)).to.be.revertedWithCustomError(
+                airdrop,
+                'InvalidMerkleProof'
+            );
+        });
+    });
 });

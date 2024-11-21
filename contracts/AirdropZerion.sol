@@ -16,6 +16,7 @@ contract AirdropZerion is Ownable {
     error AlreadyClaimed();
     error InvalidMerkleProof();
     error InavilidTokenAddress();
+    error NoTokensToWithdraw();
 
     constructor(bytes32 _merkleRoot, address _tokenAddress) {
         if (_tokenAddress == address(0)) {
@@ -55,5 +56,15 @@ contract AirdropZerion is Ownable {
     ) internal view returns (bool) {
         bytes32 leaf = keccak256(abi.encodePacked(claimant, amount));
         return MerkleProof.verify(proof, merkleRoot, leaf);
+    }
+
+    // New method to withdraw tokens
+    function withdrawTokens() external onlyOwner {
+        IERC20 token = IERC20(tokenAddress);
+        uint256 balance = token.balanceOf(address(this));
+        if (balance == 0) {
+            revert NoTokensToWithdraw();
+        }
+        token.transfer(owner(), balance);
     }
 }

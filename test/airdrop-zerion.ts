@@ -174,6 +174,47 @@ describe('AirdropZerion', function () {
         });
     });
 
+    describe('Token Withdrawal', function () {
+        it('Should allow the owner to withdraw tokens when balance is greater than zero', async function () {
+            // Ensure the contract has some tokens
+            const contractBalance = await token.balanceOf(airdrop.address);
+            expect(contractBalance).to.be.gt(0);
+
+            // Owner withdraws tokens
+            await airdrop.connect(owner).withdrawTokens();
+
+            // Verify that the contract balance is now zero
+            const newContractBalance = await token.balanceOf(airdrop.address);
+            expect(newContractBalance).to.equal(0);
+
+            // Verify that the owner received the tokens
+            const ownerBalance = await token.balanceOf(owner.address);
+            expect(ownerBalance).to.equal(contractBalance);
+        });
+
+        it('Should revert when a non-owner tries to withdraw tokens', async function () {
+            // Attempt to withdraw tokens as addr1
+            await expect(airdrop.connect(addr1).withdrawTokens()).to.be.revertedWith(
+                'Ownable: caller is not the owner'
+            );
+        });
+
+        it('Should revert with NoTokensToWithdraw error when balance is zero', async function () {
+            // First, owner withdraws all tokens
+            await airdrop.connect(owner).withdrawTokens();
+
+            // Contract balance should be zero now
+            const contractBalance = await token.balanceOf(airdrop.address);
+            expect(contractBalance).to.equal(0);
+
+            // Attempt to withdraw tokens again
+            await expect(airdrop.connect(owner).withdrawTokens()).to.be.revertedWithCustomError(
+                airdrop,
+                'NoTokensToWithdraw'
+            );
+        });
+    });
+
     describe('Large Airdrop Test', function () {
         it('Should handle a large number of addresses efficiently', async function () {
             // Number of addresses

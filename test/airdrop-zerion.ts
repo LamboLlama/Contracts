@@ -16,10 +16,19 @@ describe('AirdropZerion', function () {
     const reverter = new Reverter();
     let merkleTree: MerkleTree;
     let merkleRoot: string;
-    const tokenAmount = ethers.utils.parseEther('10'); // 10 tokens per claim
+
+    const claimList = [
+        { address: '', amount: ethers.utils.parseEther('10') }, // Placeholder for addr1
+        { address: '', amount: ethers.utils.parseEther('20') }, // Placeholder for addr2
+        { address: '', amount: ethers.utils.parseEther('30') }, // Placeholder for addr3
+    ];
 
     before(async () => {
         [owner, addr1, addr2, addr3] = await ethers.getSigners();
+
+        claimList[0].address = addr1.address;
+        claimList[1].address = addr2.address;
+        claimList[2].address = addr3.address;
 
         // Deploy ERC20Mock token
         const Token = await ethers.getContractFactory('ERC20Mock');
@@ -27,89 +36,101 @@ describe('AirdropZerion', function () {
         await token.deployed();
 
         // Generate Merkle Tree for airdrop
-        const leaves = [addr1.address, addr2.address, addr3.address].map((addr) =>
-            ethers.utils.keccak256(ethers.utils.solidityPack(['address'], [addr]))
+        const leaves = claimList.map(({ address, amount }) =>
+            ethers.utils.keccak256(ethers.utils.solidityPack(['address', 'uint256'], [address, amount]))
         );
         merkleTree = new MerkleTree(leaves, ethers.utils.keccak256, { sortPairs: true });
         merkleRoot = merkleTree.getHexRoot();
 
         // Deploy AirdropZerion contract
         const AirdropZerion = await ethers.getContractFactory('AirdropZerion');
-        airdrop = (await AirdropZerion.deploy(merkleRoot, token.address, tokenAmount)) as AirdropZerion;
+        airdrop = (await AirdropZerion.deploy(merkleRoot, token.address)) as AirdropZerion;
         await airdrop.deployed();
 
         // Fund Airdrop contract with tokens
-        await token.mint(airdrop.address, ethers.utils.parseEther('1000'));
+        const totalAmount = claimList.reduce((acc, { amount }) => acc.add(amount), ethers.constants.Zero);
+        await token.mint(airdrop.address, totalAmount);
 
         await reverter.snapshot();
     });
 
     afterEach(reverter.revert);
 
-    describe('Deployment', function () {
-        it('Should revert if token amount is zero', async function () {
-            const AirdropZerion = await ethers.getContractFactory('AirdropZerion');
-            await expect(
-                AirdropZerion.deploy(merkleRoot, token.address, ethers.constants.Zero)
-            ).to.be.revertedWithCustomError(AirdropZerion, 'InvalidTokenAmount');
-        });
+    function getAmountForAddress(address: string) {
+        const claim = claimList.find((claim) => claim.address === address);
+        if (!claim) throw new Error('Address not in claim list');
+        return claim.amount;
+    }
 
+    describe('Deployment', function () {
         it('Should revert if token address is invalid', async function () {
             const AirdropZerion = await ethers.getContractFactory('AirdropZerion');
             await expect(
-                AirdropZerion.deploy(merkleRoot, ethers.constants.AddressZero, tokenAmount)
+                AirdropZerion.deploy(merkleRoot, ethers.constants.AddressZero)
             ).to.be.revertedWithCustomError(AirdropZerion, 'InavilidTokenAddress');
         });
 
-        it('Should set the correct merkle root, token address, and token amount', async function () {
+        it('Should set the correct merkle root and token address', async function () {
             expect(await airdrop.merkleRoot()).to.equal(merkleRoot);
             expect(await airdrop.tokenAddress()).to.equal(token.address);
-            expect(await airdrop.tokenAmount()).to.equal(tokenAmount);
         });
     });
 
     describe('Claiming Airdrop', function () {
         it('Should revert with AlreadyClaimed error if address has already claimed', async function () {
-            const proof = merkleTree.getHexProof(
-                ethers.utils.keccak256(ethers.utils.solidityPack(['address'], [addr1.address]))
+            const amount = getAmountForAddress(addr1.address);
+            const leaf = ethers.utils.keccak256(
+                ethers.utils.solidityPack(['address', 'uint256'], [addr1.address, amount])
             );
+            const proof = merkleTree.getHexProof(leaf);
 
             // First claim
-            await airdrop.connect(addr1).claim(proof);
+            await airdrop.connect(addr1).claim(amount, proof);
 
             // Attempt to claim again
-            await expect(airdrop.connect(addr1).claim(proof)).to.be.revertedWithCustomError(airdrop, 'AlreadyClaimed');
+            await expect(airdrop.connect(addr1).claim(amount, proof)).to.be.revertedWithCustomError(
+                airdrop,
+                'AlreadyClaimed'
+            );
         });
 
         it('Should revert with InvalidMerkleProof error if proof is invalid', async function () {
-            // Generate an invalid proof
-            const invalidProof = merkleTree.getHexProof(
-                ethers.utils.keccak256(ethers.utils.solidityPack(['address'], [addr3.address]))
-            );
+            // Get amount for addr1
+            const correctAmount = getAmountForAddress(addr1.address);
+            const incorrectAmount = getAmountForAddress(addr3.address);
 
-            // Use addr1 to claim with addr3's proof
-            await expect(airdrop.connect(addr1).claim(invalidProof)).to.be.revertedWithCustomError(
-                airdrop,
-                'InvalidMerkleProof'
+            // Generate correct proof for addr1
+            const leaf = ethers.utils.keccak256(
+                ethers.utils.solidityPack(['address', 'uint256'], [addr1.address, correctAmount])
             );
+            const proof = merkleTree.getHexProof(leaf);
+
+            // Attempt to claim with incorrect amount
+            await expect(
+                airdrop.connect(addr1).claim(incorrectAmount, proof)
+            ).to.be.revertedWithCustomError(airdrop, 'InvalidMerkleProof');
         });
 
         it('Should emit event on successful claim', async function () {
-            const proof = merkleTree.getHexProof(
-                ethers.utils.keccak256(ethers.utils.solidityPack(['address'], [addr1.address]))
+            const amount = getAmountForAddress(addr1.address);
+            const leaf = ethers.utils.keccak256(
+                ethers.utils.solidityPack(['address', 'uint256'], [addr1.address, amount])
             );
+            const proof = merkleTree.getHexProof(leaf);
 
-            await expect(airdrop.connect(addr1).claim(proof))
+            await expect(airdrop.connect(addr1).claim(amount, proof))
                 .to.emit(airdrop, 'Claimed')
-                .withArgs(addr1.address, tokenAmount);
+                .withArgs(addr1.address, amount);
         });
 
         it('Should update claimed status after a successful claim', async function () {
-            const proof = merkleTree.getHexProof(
-                ethers.utils.keccak256(ethers.utils.solidityPack(['address'], [addr2.address]))
+            const amount = getAmountForAddress(addr2.address);
+            const leaf = ethers.utils.keccak256(
+                ethers.utils.solidityPack(['address', 'uint256'], [addr2.address, amount])
             );
+            const proof = merkleTree.getHexProof(leaf);
 
-            await airdrop.connect(addr2).claim(proof);
+            await airdrop.connect(addr2).claim(amount, proof);
 
             expect(await airdrop.claimed(addr2.address)).to.be.true;
         });
@@ -117,8 +138,12 @@ describe('AirdropZerion', function () {
 
     describe('Merkle Root Updates', function () {
         it('Should allow the owner to update the Merkle Root', async function () {
-            const newLeaves = [addr1.address, addr3.address].map((addr) =>
-                ethers.utils.keccak256(ethers.utils.solidityPack(['address'], [addr]))
+            const newClaimList = [
+                { address: addr1.address, amount: ethers.utils.parseEther('15') },
+                { address: addr3.address, amount: ethers.utils.parseEther('25') },
+            ];
+            const newLeaves = newClaimList.map(({ address, amount }) =>
+                ethers.utils.keccak256(ethers.utils.solidityPack(['address', 'uint256'], [address, amount]))
             );
             const newMerkleTree = new MerkleTree(newLeaves, ethers.utils.keccak256, {
                 sortPairs: true,
@@ -131,8 +156,12 @@ describe('AirdropZerion', function () {
         });
 
         it('Should revert if non-owner tries to update the Merkle Root', async function () {
-            const newLeaves = [addr1.address, addr3.address].map((addr) =>
-                ethers.utils.keccak256(ethers.utils.solidityPack(['address'], [addr]))
+            const newClaimList = [
+                { address: addr1.address, amount: ethers.utils.parseEther('15') },
+                { address: addr3.address, amount: ethers.utils.parseEther('25') },
+            ];
+            const newLeaves = newClaimList.map(({ address, amount }) =>
+                ethers.utils.keccak256(ethers.utils.solidityPack(['address', 'uint256'], [address, amount]))
             );
             const newMerkleTree = new MerkleTree(newLeaves, ethers.utils.keccak256, {
                 sortPairs: true,
@@ -143,5 +172,88 @@ describe('AirdropZerion', function () {
                 'Ownable: caller is not the owner'
             );
         });
+    });
+
+    describe('Large Airdrop Test', function () {
+        it('Should handle a large number of addresses efficiently', async function () {
+            // Number of addresses
+            const numAddresses = 100;
+
+            // Initialize arrays
+            const addresses = new Array(numAddresses);
+            const amounts = new Array(numAddresses);
+            const leaves = new Array(numAddresses);
+            const claimListLarge = new Array(numAddresses);
+
+            // Use a fixed amount for all addresses
+            const amountPerAddress = ethers.utils.parseUnits('1', 18); // 1 token with 18 decimals
+
+            // Total amount calculation
+            const totalAmount = amountPerAddress.mul(numAddresses);
+
+            // Generate addresses and leaves
+            for (let i = 0; i < numAddresses; i++) {
+                // Generate deterministic pseudo-random addresses
+                const address = ethers.utils.getAddress(
+                    ethers.utils.hexZeroPad(ethers.utils.hexlify(i + 1), 20)
+                );
+                addresses[i] = address;
+
+                // Assign the fixed amount
+                amounts[i] = amountPerAddress;
+
+                // Prepare leaf
+                const leaf = ethers.utils.keccak256(
+                    ethers.utils.solidityPack(['address', 'uint256'], [address, amountPerAddress])
+                );
+                leaves[i] = leaf;
+
+                // Add to claim list
+                claimListLarge[i] = { address, amount: amountPerAddress };
+            }
+
+            // Generate Merkle Tree
+            const merkleTreeLarge = new MerkleTree(leaves, ethers.utils.keccak256, { sortPairs: true });
+            const merkleRootLarge = merkleTreeLarge.getHexRoot();
+
+            // Deploy new Airdrop contract
+            const AirdropZerion = await ethers.getContractFactory('AirdropZerion');
+            const airdropLarge = (await AirdropZerion.deploy(merkleRootLarge, token.address)) as AirdropZerion;
+            await airdropLarge.deployed();
+
+            // Fund Airdrop contract with total amount
+            await token.mint(airdropLarge.address, totalAmount);
+
+            // Test claiming for the first address
+            const testIndex = 0;
+            const testAddress = addresses[testIndex];
+            const testAmount = amounts[testIndex];
+
+            // Generate proof
+            const leaf = leaves[testIndex];
+            const proof = merkleTreeLarge.getHexProof(leaf);
+
+            // Impersonate the account
+            await ethers.provider.send('hardhat_impersonateAccount', [testAddress]);
+            const impersonatedSigner = await ethers.getSigner(testAddress);
+
+            // Fund the impersonated account with ETH to pay for gas
+            await owner.sendTransaction({
+                to: testAddress,
+                value: ethers.utils.parseEther('1'),
+            });
+
+            // Claim the tokens
+            await expect(airdropLarge.connect(impersonatedSigner).claim(testAmount, proof))
+                .to.emit(airdropLarge, 'Claimed')
+                .withArgs(testAddress, testAmount);
+
+            // Verify that the tokens were received
+            const balance = await token.balanceOf(testAddress);
+            expect(balance).to.equal(testAmount);
+
+            // Stop impersonation
+            await ethers.provider.send('hardhat_stopImpersonatingAccount', [testAddress]);
+        }).timeout(60000); // Increase timeout if necessary
     });
 });

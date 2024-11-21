@@ -9,27 +9,20 @@ contract AirdropZerion is Ownable {
     bytes32 public merkleRoot;
     mapping(address => bool) public claimed;
 
-    uint256 public tokenAmount;
     address public tokenAddress;
 
     event Claimed(address indexed claimant, uint256 amount);
 
     error AlreadyClaimed();
     error InvalidMerkleProof();
-    error InvalidTokenAmount();
     error InavilidTokenAddress();
 
-    constructor(bytes32 _merkleRoot, address _tokenAddress, uint256 _tokenAmount) {
-        if (_tokenAmount == 0) {
-            revert InvalidTokenAmount();
-        }
-
+    constructor(bytes32 _merkleRoot, address _tokenAddress) {
         if (_tokenAddress == address(0)) {
             revert InavilidTokenAddress();
         }
 
         merkleRoot = _merkleRoot;
-        tokenAmount = _tokenAmount;
         tokenAddress = _tokenAddress;
     }
 
@@ -38,25 +31,29 @@ contract AirdropZerion is Ownable {
         merkleRoot = _merkleRoot;
     }
 
-    function claim(bytes32[] calldata proof) external {
+    function claim(uint256 amount, bytes32[] calldata proof) external {
         if (claimed[msg.sender]) {
             revert AlreadyClaimed();
         }
 
-        if (!verify(msg.sender, proof)) {
+        if (!verify(msg.sender, amount, proof)) {
             revert InvalidMerkleProof();
         }
 
         claimed[msg.sender] = true;
 
-        // Transfer Lambo Llama ($LLL) tokens to the claimant
-        IERC20(tokenAddress).transfer(msg.sender, tokenAmount);
+        // Transfer tokens to the claimant
+        IERC20(tokenAddress).transfer(msg.sender, amount);
 
-        emit Claimed(msg.sender, tokenAmount);
+        emit Claimed(msg.sender, amount);
     }
 
-    function verify(address claimant, bytes32[] calldata proof) internal view returns (bool) {
-        bytes32 leaf = keccak256(abi.encodePacked(claimant));
+    function verify(
+        address claimant,
+        uint256 amount,
+        bytes32[] calldata proof
+    ) internal view returns (bool) {
+        bytes32 leaf = keccak256(abi.encodePacked(claimant, amount));
         return MerkleProof.verify(proof, merkleRoot, leaf);
     }
 }
